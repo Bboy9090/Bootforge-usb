@@ -1,4 +1,7 @@
 use crate::{api::UsbEnumerator, errors::UsbError, model::*};
+use std::time::Duration;
+
+const USB_DESCRIPTOR_TIMEOUT: Duration = Duration::from_secs(1);
 
 #[derive(Default)]
 pub struct FallbackEnumerator;
@@ -17,8 +20,7 @@ impl UsbEnumerator for FallbackEnumerator {
 
             let handle = device.open();
             let (manufacturer, product, serial_number) = if let Ok(h) = &handle {
-                let timeout = std::time::Duration::from_secs(1);
-                let languages = match h.read_languages(timeout) {
+                let languages = match h.read_languages(USB_DESCRIPTOR_TIMEOUT) {
                     Ok(langs) if !langs.is_empty() => langs,
                     _ => continue,
                 };
@@ -26,13 +28,13 @@ impl UsbEnumerator for FallbackEnumerator {
 
                 let manufacturer = device_desc
                     .manufacturer_string_index()
-                    .and_then(|idx| h.read_string_descriptor(lang, idx, timeout).ok());
+                    .and_then(|idx| h.read_string_descriptor(lang, idx, USB_DESCRIPTOR_TIMEOUT).ok());
                 let product = device_desc
                     .product_string_index()
-                    .and_then(|idx| h.read_string_descriptor(lang, idx, timeout).ok());
+                    .and_then(|idx| h.read_string_descriptor(lang, idx, USB_DESCRIPTOR_TIMEOUT).ok());
                 let serial = device_desc
                     .serial_number_string_index()
-                    .and_then(|idx| h.read_string_descriptor(lang, idx, timeout).ok());
+                    .and_then(|idx| h.read_string_descriptor(lang, idx, USB_DESCRIPTOR_TIMEOUT).ok());
 
                 (manufacturer, product, serial)
             } else {

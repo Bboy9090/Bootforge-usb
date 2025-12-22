@@ -1,5 +1,7 @@
 use crate::errors::UsbError;
 
+const DEFAULT_HUB_PORTS: u8 = 4;
+
 #[derive(Debug, Clone)]
 pub struct UsbPort {
     pub port_number: u8,
@@ -63,7 +65,7 @@ pub fn enumerate_hubs() -> Result<Vec<UsbHub>, UsbError> {
             let hub = UsbHub {
                 address: device.address(),
                 bus: device.bus_number(),
-                num_ports: 4, // Default, should be read from hub descriptor
+                num_ports: DEFAULT_HUB_PORTS,
                 ports: Vec::new(),
             };
             

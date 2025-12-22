@@ -5,7 +5,10 @@
 //!
 //! Run with: cargo run --example detect_protocols
 
-use bootforge_usb::{api::UsbEnumerator, classify_device_protocols, enumerate::FallbackEnumerator, DeviceProtocol};
+use bootforge_usb::api::UsbEnumerator;
+use bootforge_usb::classify_device_protocols;
+use bootforge_usb::enumerate::FallbackEnumerator;
+use bootforge_usb::DeviceProtocol;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logger

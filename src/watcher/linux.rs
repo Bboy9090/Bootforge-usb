@@ -35,6 +35,8 @@ impl DeviceWatcher for LinuxDeviceWatcher {
 
         #[cfg(feature = "udev")]
         {
+            // TODO: Store thread handle for graceful shutdown
+            // Future improvement: Add a control channel to signal thread termination
             thread::spawn(move || {
                 // Use udev to monitor USB device changes
                 let context = match udev::Context::new() {

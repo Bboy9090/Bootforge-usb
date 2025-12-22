@@ -9,6 +9,10 @@ repository = "https://github.com/Bboy9090/Bootforge-usb"
 keywords = ["usb", "devices", "enumeration", "hotplug", "driver"]
 categories = ["hardware-support", "os"]
 
+[features]
+default = []
+udev = ["dep:udev"]
+
 [dependencies]
 rusb = "0.9"
 serde = { version = "1.0", features = ["derive"] }
