@@ -48,15 +48,17 @@ fn enumerate_device(device: &rusb::Device<rusb::Context>) -> Result<UsbDeviceInf
     device_info.subclass = device_desc.sub_class_code();
     device_info.protocol = device_desc.protocol_code();
 
-    // Convert rusb::Version to u16 (BCD format)
+    // USB uses BCD (Binary-Coded Decimal) format: 0xJJMN where JJ.M.N is the version
+    // rusb::Version provides major, minor, sub_minor components
+    // Each BCD digit occupies 4 bits, so 0x0210 = 2.1.0
     let usb_ver = device_desc.usb_version();
-    device_info.usb_version = (usb_ver.major() as u16) << 8
-        | (usb_ver.minor() as u16) << 4
+    device_info.usb_version = ((usb_ver.major() as u16) << 8)
+        | ((usb_ver.minor() as u16) << 4)
         | (usb_ver.sub_minor() as u16);
 
     let dev_ver = device_desc.device_version();
-    device_info.device_version = (dev_ver.major() as u16) << 8
-        | (dev_ver.minor() as u16) << 4
+    device_info.device_version = ((dev_ver.major() as u16) << 8)
+        | ((dev_ver.minor() as u16) << 4)
         | (dev_ver.sub_minor() as u16);
 
     device_info.num_configurations = device_desc.num_configurations();

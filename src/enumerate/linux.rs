@@ -1,5 +1,5 @@
 use crate::types::UsbDeviceInfo;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use log::debug;
 use std::fs;
 use std::path::PathBuf;
@@ -65,8 +65,15 @@ fn find_sysfs_path(bus_number: u8, device_address: u8) -> Option<PathBuf> {
 #[cfg(target_os = "linux")]
 fn read_sysfs_number(device_path: &std::path::Path, filename: &str) -> Result<u8> {
     let file_path = device_path.join(filename);
-    let content = fs::read_to_string(file_path)?;
-    let value = content.trim().parse()?;
+    let content = fs::read_to_string(&file_path)
+        .with_context(|| format!("Failed to read {}", file_path.display()))?;
+    let value = content.trim().parse().with_context(|| {
+        format!(
+            "Failed to parse {} from {} as number",
+            content.trim(),
+            file_path.display()
+        )
+    })?;
     Ok(value)
 }
 
