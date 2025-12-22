@@ -2,11 +2,13 @@ use crate::types::UsbDeviceInfo;
 use anyhow::Result;
 use log::info;
 
+pub mod common;
 mod libusb;
 mod linux;
 mod macos;
 mod windows;
 
+pub use common::FallbackEnumerator;
 pub use libusb::enumerate_libusb;
 pub use linux::enrich_linux;
 pub use macos::enrich_macos;

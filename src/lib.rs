@@ -9,6 +9,10 @@
 //! ## Features
 //!
 //! - Cross-platform USB device enumeration
+//! - Real-time device hotplug monitoring
+//! - Protocol detection (ADB, Fastboot, Apple, MTP)
+//! - USB port topology mapping
+//! - Driver status and health checks
 //! - Platform-specific device information enrichment
 //! - Normalized device information structure
 //! - Support for vendor/product IDs, serial numbers, and device paths
@@ -34,12 +38,26 @@
 //! }
 //! ```
 
+pub mod api;
 pub mod enumerate;
+pub mod errors;
+pub mod handshake;
+pub mod model;
+pub mod ports;
 pub mod types;
+pub mod watcher;
 
 // Re-export main types and functions for convenient access
+pub use api::UsbEnumerator;
 pub use enumerate::enumerate_all;
+pub use errors::UsbError;
+pub use handshake::{classify_device_protocols, DeviceProtocol};
+pub use model::{DriverStatus, LinkHealth, UsbDeviceRecord, UsbId, UsbLocation};
 pub use types::{PlatformHint, UsbBusType, UsbDeviceInfo, UsbIds};
+pub use watcher::{DeviceEvent, DeviceWatcher};
+
+// Platform-specific watcher
+pub use watcher::PlatformWatcher;
 
 #[cfg(test)]
 mod tests {
