@@ -1,29 +1,39 @@
 [package]
 name = "bootforge-usb"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["BootForge Contributors"]
-description = "Cross-platform USB device enumeration and information library"
+description = "Advanced USB detection and device orchestration framework for Windows, macOS, and Linux"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Bboy9090/Bootforge-usb"
-keywords = ["usb", "devices", "enumeration"]
+keywords = ["usb", "devices", "enumeration", "hotplug", "driver"]
 categories = ["hardware-support", "os"]
 
 [dependencies]
 rusb = "0.9"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 thiserror = "1.0"
 anyhow = "1.0"
 log = "0.4"
+tracing = "0.1"
 
 [dev-dependencies]
 env_logger = "0.11"
+tokio-test = "0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-# Future: udev for Linux-specific enrichment
+udev = { version = "0.9", optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-# Future: windows crate for SetupAPI integration
+windows = { version = "0.58", features = [
+  "Win32_Devices_DeviceAndDriverInstallation",
+  "Win32_Devices_Usb",
+  "Win32_Foundation",
+  "Win32_System_Registry",
+  "Win32_Storage_FileSystem",
+] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-# Future: IOKit bindings for macOS-specific enrichment
+core-foundation = "0.10"
+io-kit-sys = "0.4"
