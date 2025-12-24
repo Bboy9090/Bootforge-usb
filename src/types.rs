@@ -1,3 +1,4 @@
+use crate::model::{DriverStatus, LinkHealth};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -36,6 +37,14 @@ pub struct UsbDeviceInfo {
     pub bus_type: UsbBusType,
     /// Additional USB IDs information
     pub usb_ids: Option<UsbIds>,
+    /// Driver status information
+    pub driver_status: DriverStatus,
+    /// Link health status
+    pub link_health: LinkHealth,
+    /// Device tags for classification
+    pub tags: Vec<String>,
+    /// USB port path/topology
+    pub port_path: Option<String>,
 }
 
 impl UsbDeviceInfo {
@@ -58,7 +67,24 @@ impl UsbDeviceInfo {
             platform_hint: PlatformHint::default(),
             bus_type: UsbBusType::Unknown,
             usb_ids: None,
+            driver_status: DriverStatus::Unknown,
+            link_health: LinkHealth::Good,
+            tags: Vec::new(),
+            port_path: None,
         }
+    }
+    
+    /// Add a tag to the device
+    pub fn add_tag(&mut self, tag: impl Into<String>) {
+        let tag = tag.into();
+        if !self.tags.contains(&tag) {
+            self.tags.push(tag);
+        }
+    }
+    
+    /// Check if device has a specific tag
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
     }
 }
 
@@ -68,14 +94,46 @@ pub struct PlatformHint {
     /// Windows-specific device path (if available)
     #[cfg(target_os = "windows")]
     pub device_path: Option<String>,
+    
+    /// Windows-specific device instance path
+    #[cfg(target_os = "windows")]
+    pub instance_path: Option<String>,
+    
+    /// Windows-specific driver name
+    #[cfg(target_os = "windows")]
+    pub driver_name: Option<String>,
+    
+    /// Windows-specific hardware IDs
+    #[cfg(target_os = "windows")]
+    pub hardware_ids: Vec<String>,
 
     /// Linux-specific sysfs path (if available)
     #[cfg(target_os = "linux")]
     pub sysfs_path: Option<String>,
+    
+    /// Linux-specific driver name
+    #[cfg(target_os = "linux")]
+    pub driver: Option<String>,
+    
+    /// Linux-specific authorization status
+    #[cfg(target_os = "linux")]
+    pub authorized: Option<bool>,
+    
+    /// Linux-specific device node (e.g., /dev/bus/usb/001/002)
+    #[cfg(target_os = "linux")]
+    pub devnode: Option<String>,
 
     /// macOS-specific IORegistry path (if available)
     #[cfg(target_os = "macos")]
     pub ioregistry_path: Option<String>,
+    
+    /// macOS-specific location ID
+    #[cfg(target_os = "macos")]
+    pub location_id: Option<u32>,
+    
+    /// macOS-specific driver name
+    #[cfg(target_os = "macos")]
+    pub driver_name: Option<String>,
 
     /// Generic device path for other platforms
     #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
