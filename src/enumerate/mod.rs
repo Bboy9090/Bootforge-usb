@@ -16,10 +16,27 @@ pub use windows::enrich_windows;
 
 /// Enumerate all USB devices on the system
 ///
-/// This is the main entry point for USB device enumeration. It:
-/// 1. Uses libusb (rusb) for cross-platform base enumeration
-/// 2. Enriches device information with platform-specific data
-/// 3. Returns a vector of normalized USB device information
+/// This is the main entry point for USB device enumeration. It executes
+/// the complete detection pipeline with four stages:
+///
+/// **Stage 1: Transport Scanning**
+/// - Uses libusb (rusb) for cross-platform base enumeration
+/// - Probes candidate devices with VID/PID/bus/address
+/// - Attempts to read string descriptors (gracefully handles permission errors)
+///
+/// **Stage 2: Descriptor Reading** (integrated into Stage 1)
+/// - Reads manufacturer, product, and serial strings when accessible
+/// - Creates candidate device records
+///
+/// **Stage 3: Platform Enrichment**
+/// - Windows: Queries SetupAPI for device paths and driver status
+/// - macOS: Reads IOKit registry for paths and location IDs
+/// - Linux: Maps sysfs paths, driver bindings, and authorization status
+///
+/// **Stage 4: Protocol Classification** (performed by caller if needed)
+/// - Use `classify_device_protocols()` to detect ADB, Fastboot, Apple, MTP
+///
+/// The result is a list of confirmed devices ready for application use.
 ///
 /// # Example
 ///
@@ -36,33 +53,33 @@ pub use windows::enrich_windows;
 /// }
 /// ```
 pub fn enumerate_all() -> Result<Vec<UsbDeviceInfo>> {
-    info!("Starting USB device enumeration");
+    info!("Starting USB device detection pipeline");
 
-    // Step 1: Get base enumeration from libusb
+    // Stage 1: Transport Scanning - probe candidate devices
     let mut devices = enumerate_libusb()?;
 
-    info!("Base enumeration found {} devices", devices.len());
+    info!("Stage 1 complete: {} candidate devices discovered", devices.len());
 
-    // Step 2: Enrich with platform-specific information
+    // Stage 3: Platform Enrichment - augment with OS-specific data
     #[cfg(target_os = "windows")]
     {
-        info!("Applying Windows-specific enrichment");
+        info!("Stage 3: Applying Windows platform enrichment");
         enrich_windows(&mut devices)?;
     }
 
     #[cfg(target_os = "macos")]
     {
-        info!("Applying macOS-specific enrichment");
+        info!("Stage 3: Applying macOS platform enrichment");
         enrich_macos(&mut devices)?;
     }
 
     #[cfg(target_os = "linux")]
     {
-        info!("Applying Linux-specific enrichment");
+        info!("Stage 3: Applying Linux platform enrichment");
         enrich_linux(&mut devices)?;
     }
 
-    info!("Enumeration complete, returning {} devices", devices.len());
+    info!("Detection pipeline complete: {} confirmed devices", devices.len());
     Ok(devices)
 }
 

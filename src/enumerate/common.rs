@@ -3,21 +3,40 @@ use std::time::Duration;
 
 const USB_DESCRIPTOR_TIMEOUT: Duration = Duration::from_secs(1);
 
+/// FallbackEnumerator provides basic USB device enumeration using rusb/libusb.
+/// 
+/// This enumerator implements the UsbEnumerator trait and serves as a fallback
+/// implementation that works across all platforms. It performs the core detection
+/// pipeline stages:
+/// - Transport scanning via libusb
+/// - Descriptor reading (manufacturer, product, serial)
+/// - Basic device record creation
+/// 
+/// For platform-specific enrichment (paths, drivers), use the `enumerate_all()`
+/// function from the `enumerate` module instead.
 #[derive(Default)]
 pub struct FallbackEnumerator;
 
 impl UsbEnumerator for FallbackEnumerator {
+    /// Enumerate USB devices using rusb for basic cross-platform detection.
+    /// 
+    /// This implementation probes candidate devices and attempts to read their
+    /// descriptors. It provides the foundation for device detection but does
+    /// not include platform-specific enrichment.
     fn enumerate(&self) -> Result<Vec<UsbDeviceRecord>, UsbError> {
-        // Fallback implementation using rusb for basic enumeration
+        // Use rusb to scan USB transports and probe candidates
         let devices = rusb::devices()?;
         let mut records = Vec::new();
 
         for device in devices.iter() {
+            // Read basic device descriptor (Stage 1: Candidate probing)
             let device_desc = match device.device_descriptor() {
                 Ok(desc) => desc,
-                Err(_) => continue,
+                Err(_) => continue, // Skip devices we can't access
             };
 
+            // Attempt to open device and read string descriptors (Stage 2)
+            // Note: This may fail due to permissions; we handle it gracefully
             let handle = device.open();
             let (manufacturer, product, serial_number) = if let Ok(h) = &handle {
                 let languages = match h.read_languages(USB_DESCRIPTOR_TIMEOUT) {
@@ -41,6 +60,7 @@ impl UsbEnumerator for FallbackEnumerator {
                 (None, None, None)
             };
 
+            // Build confirmed device record with available information
             let record = UsbDeviceRecord {
                 id: UsbId::new(device_desc.vendor_id(), device_desc.product_id()),
                 location: UsbLocation {

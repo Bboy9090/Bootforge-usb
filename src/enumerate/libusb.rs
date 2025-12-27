@@ -3,40 +3,56 @@ use anyhow::{Context, Result};
 use log::{debug, warn};
 use rusb::UsbContext;
 
-/// Enumerate all USB devices using libusb (rusb)
+/// Scan all available USB transports and probe candidate devices
+/// 
+/// This is Stage 1 of the detection pipeline: Transport Scanning.
+/// It discovers USB devices via libusb (rusb) and creates candidate
+/// device records with basic identification (VID/PID/bus/address).
+/// String descriptors are read when possible, but failures are gracefully
+/// handled as they may require elevated permissions.
 pub fn enumerate_libusb() -> Result<Vec<UsbDeviceInfo>> {
-    debug!("Starting USB enumeration with libusb");
+    debug!("Starting USB transport scan with libusb");
 
     let mut devices = Vec::new();
 
-    // Initialize libusb context
+    // Initialize libusb context for cross-platform USB access
     let context = rusb::Context::new().context("Failed to initialize libusb context")?;
 
-    // Get list of devices
+    // Query all USB devices on the system
     let device_list = context.devices().context("Failed to get USB device list")?;
 
+    // Probe each candidate device
     for device in device_list.iter() {
-        match enumerate_device(&device) {
+        match probe_usb_candidate(&device) {
             Ok(device_info) => {
                 debug!(
-                    "Found device: {:04x}:{:04x}",
+                    "Probed candidate: {:04x}:{:04x}",
                     device_info.vendor_id, device_info.product_id
                 );
                 devices.push(device_info);
             }
             Err(e) => {
-                warn!("Failed to enumerate device: {}", e);
+                warn!("Failed to probe candidate device: {}", e);
                 // Continue with other devices even if one fails
             }
         }
     }
 
-    debug!("Found {} USB devices", devices.len());
+    debug!("Discovered {} USB candidate devices", devices.len());
     Ok(devices)
 }
 
-/// Enumerate a single USB device
-fn enumerate_device(device: &rusb::Device<rusb::Context>) -> Result<UsbDeviceInfo> {
+/// Probe a single USB candidate device and extract basic information
+/// 
+/// This function creates a candidate device record by:
+/// 1. Reading the device descriptor (VID/PID/class/version)
+/// 2. Attempting to read string descriptors (manufacturer/product/serial)
+/// 3. Recording bus location (bus number and device address)
+/// 
+/// Note: String descriptor reading may fail due to permissions, which is
+/// handled gracefully. The resulting candidate may have incomplete information
+/// but is still valid for further processing.
+fn probe_usb_candidate(device: &rusb::Device<rusb::Context>) -> Result<UsbDeviceInfo> {
     let device_desc = device
         .device_descriptor()
         .context("Failed to get device descriptor")?;
