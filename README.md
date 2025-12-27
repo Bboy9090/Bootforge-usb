@@ -6,6 +6,12 @@ A cross-platform Rust library for USB device enumeration and information gatheri
 
 BootForge USB provides a unified interface for discovering and managing USB devices across Windows, macOS, and Linux platforms. It combines cross-platform enumeration using libusb (via rusb) with platform-specific APIs for enriching device information, and adds powerful features for device monitoring and protocol detection.
 
+## Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)**: Detailed detection pipeline, identity resolution, and operation safety patterns
+- **[Glossary](docs/GLOSSARY.md)**: Definitions of key terms and concepts (candidate devices, sessions, transport, lock semantics)
+- **[API Documentation](https://docs.rs/bootforge-usb)**: Complete API reference
+
 ## Features
 
 - **Cross-platform enumeration**: Works on Windows, macOS, and Linux
@@ -14,6 +20,7 @@ BootForge USB provides a unified interface for discovering and managing USB devi
 - **Protocol detection**: Automatically detect ADB, Fastboot, Apple devices, MTP, and more
 - **USB port topology**: Map USB hub connections and port paths
 - **Driver status**: Query driver binding and health status
+- **Stable device identification**: Track devices across reconnections using serial numbers or port paths
 - **Platform-specific enrichment**: 
   - Windows: Device paths via SetupAPI
   - macOS: IORegistry paths via IOKit
@@ -103,6 +110,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Architecture
 
+For a comprehensive understanding of the detection pipeline, identity resolution, and operation safety, see the **[Architecture Guide](docs/ARCHITECTURE.md)**.
+
+### Detection Pipeline
+
+USB device discovery follows a four-stage pipeline:
+
+1. **Stage 1: Transport Scanning** - Query USB bus via libusb to discover candidate devices
+2. **Stage 2: Descriptor Reading** - Read string descriptors (manufacturer, product, serial)
+3. **Stage 3: Platform Enrichment** - Add OS-specific paths, driver status, and metadata
+4. **Stage 4: Protocol Classification** - Detect high-level protocols (ADB, Fastboot, Apple, MTP)
+
+### Device Identity Resolution
+
+Track devices across reconnections using a priority-based strategy:
+
+1. **Serial Number** (preferred) - Most stable, unique per device
+2. **Port Path** - Stable if device stays in same physical port
+3. **Location Fingerprint** (fallback) - VID/PID + bus/address combination
+
+See **[Glossary](docs/GLOSSARY.md)** for detailed definitions.
+
 ### Core Components
 
 - **`api.rs`**: Defines `UsbEnumerator` trait for custom implementations
@@ -112,16 +140,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **`enumerate/`**: Enumeration and enrichment modules
   - `mod.rs`: Cross-platform dispatcher and main `enumerate_all()` function
   - `common.rs`: `FallbackEnumerator` using rusb/libusb
-  - `libusb.rs`: Base enumeration using rusb/libusb
-  - `windows.rs`: Windows-specific enrichment
-  - `macos.rs`: macOS-specific enrichment
-  - `linux.rs`: Linux-specific enrichment using sysfs
+  - `libusb.rs`: Transport scanning (Stage 1)
+  - `windows.rs`: Windows-specific enrichment (Stage 3)
+  - `macos.rs`: macOS-specific enrichment (Stage 3)
+  - `linux.rs`: Linux-specific enrichment using sysfs (Stage 3)
 - **`watcher/`**: Real-time device monitoring
   - `mod.rs`: `DeviceWatcher` trait and `DeviceEvent` types
   - `linux.rs`: udev-based monitoring (requires udev feature)
   - `windows.rs`: Windows device notification
   - `macos.rs`: IOKit notification monitoring
-- **`handshake/`**: Protocol detection modules
+- **`handshake/`**: Protocol detection modules (Stage 4)
   - `mod.rs`: Main protocol classification function
   - `adb_probe.rs`: ADB device detection
   - `fastboot_probe.rs`: Fastboot device detection
@@ -130,7 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **`ports/`**: USB topology mapping
   - `mod.rs`: Hub enumeration and port path parsing
 
-### Enumeration Flow
+### Enumeration Flow (Legacy Description)
 
 1. **Base Enumeration**: Uses libusb (rusb) to discover all USB devices
 2. **Descriptor Reading**: Extracts basic information from USB device descriptors
