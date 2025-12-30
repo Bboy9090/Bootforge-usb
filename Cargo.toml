@@ -28,6 +28,7 @@ tokio-test = "0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 udev = { version = "0.9", optional = true }
+libc = "0.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.58", features = [

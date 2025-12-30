@@ -9,7 +9,7 @@ pub mod mtp_probe;
 /// 
 /// These protocols are detected during Stage 4 (Protocol Classification)
 /// based on USB descriptors, vendor/product IDs, and interface classes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum DeviceProtocol {
     /// Android Debug Bridge
     Adb,

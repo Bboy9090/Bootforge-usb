@@ -54,6 +54,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                         println!();
                     }
+                    DeviceEvent::Reconnected { device, previous_location } => {
+                        println!("🔁 Device RECONNECTED:");
+                        println!("   ID: {}", device.id.as_hex_string());
+                        if let Some(ref product) = device.descriptor.product {
+                            println!("   Product: {}", product);
+                        }
+                        if let Some(prev) = previous_location {
+                            if let Some(ref path) = prev.port_path {
+                                println!("   Previous port: {}", path);
+                            }
+                        }
+                        println!();
+                    }
                 }
             }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {

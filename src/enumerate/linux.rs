@@ -216,12 +216,10 @@ fn get_driver_name(device_path: &std::path::Path) -> Option<String> {
         }
     }
 
-    if drivers.len() == 1 {
-        Some(drivers[0].clone())
-    } else if drivers.len() > 1 {
-        Some(format!("[{}]", drivers.join(", ")))
-    } else {
-        None
+    match drivers.len() {
+        0 => None,
+        1 => Some(drivers[0].clone()),
+        _ => Some(format!("[{}]", drivers.join(", "))),
     }
 }
 
