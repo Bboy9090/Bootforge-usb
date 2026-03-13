@@ -2,14 +2,14 @@
 // COMPLIANCE-FIRST: Classification and routing only, no execution
 
 use serde::{Deserialize, Serialize};
-use device_analysis::{DeviceProfile, RiskLevel};
+use device_analysis::DeviceProfile;
 use ownership_verification::VerificationResult;
 
 pub mod loader;
 pub use loader::{load_jurisdiction, load_all_jurisdictions, get_default_status, get_authorization_requirements, JurisdictionMap, LoaderError};
 
 // Re-export RiskLevel for use in other services
-pub use device_analysis::RiskLevel as RiskLevel;
+pub use device_analysis::RiskLevel;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LegalStatus {

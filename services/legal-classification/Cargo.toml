@@ -12,6 +12,3 @@ ownership-verification = { path = "../ownership-verification" }
 
 [dev-dependencies]
 rstest = "0.18"
-
-[dev-dependencies]
-rstest = "0.18"
