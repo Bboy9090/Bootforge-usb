@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "libbootforge",
     "services/device-analysis",
     "services/ownership-verification",
     "services/legal-classification",
@@ -9,9 +10,7 @@ members = [
     "services/authority-routing",
     "services/auth",
     "services/metrics",
-    "services/core",
-    "apps/forgeworks-core",
-    "apps/workshop-ui",
+    "apps/forgeworks-core/src-tauri",
 ]
 
 [workspace.package]
