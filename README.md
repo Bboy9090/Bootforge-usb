@@ -1,7 +1,29 @@
-# Bobby’s Workshop 3.0 — ForgeWorks Platform
+# BootForge USB — REFORGE OS Platform
 
 ## Overview
-ForgeWorks is a compliance-first, ownership-respecting platform for device analysis, classification, and routing. Built on a modular Rust architecture, it separates public certification and education from core diagnostic logic and internal research models.
+
+**BootForge USB** is the cross-platform USB enumeration and device detection layer that powers the REFORGE OS platform (formerly Bobby's Workshop 3.0). Written in Rust, it provides diagnostic and read-only device analysis capabilities across Windows, macOS, and Linux.
+
+### Architecture
+
+```
+    Bobby's Workshop (Public UX)
+              ↓
+    ForgeWorks Core (Compliance Engine)
+              ↓
+    BootForge USB (Device Detection)
+              ↓
+          Hardware
+```
+
+BootForge USB serves as the foundational layer for device enumeration, providing:
+- USB device detection and descriptor reading
+- Vendor ID/Product ID identification
+- Protocol classification (ADB, Fastboot, MTP, Apple)
+- Platform-specific device path resolution
+- **Diagnostic and read-only operations only** — no device modification
+
+REFORGE OS is a compliance-first, ownership-respecting platform for device analysis, classification, and routing. Built on a modular Rust architecture, it separates public certification and education from core diagnostic logic and internal research models.
 
 ## Platform Structure
 
