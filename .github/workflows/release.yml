@@ -1,0 +1,21 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build Release
+      run: cargo build --release --verbose
+      
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-binaries
+        path: target/release/
+        retention-days: 5
