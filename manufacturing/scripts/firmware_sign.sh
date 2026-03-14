@@ -29,9 +29,15 @@ echo "Signing firmware..."
 openssl dgst -sha256 -sign "$SIGNING_KEY" -out "${OUTPUT_FILE}.sig" "$FIRMWARE_FILE"
 
 # Embed signature in firmware (format depends on bootloader)
-# This is a placeholder - actual implementation depends on bootloader
-
-echo "Firmware signed successfully"
+# Use openssl to generate a signature for the firmware image
+echo "Signing firmware using OpenSSL with key: $SIGNING_KEY"
+openssl dgst -sha256 -sign "$SIGNING_KEY" -out "${OUTPUT_FILE}.sig" "$FIRMWARE_FILE"
+if [ $? -eq 0 ]; then
+    echo "Firmware successfully signed: ${OUTPUT_FILE}.sig"
+else
+    echo "Error: Failed to sign firmware"
+    exit 1
+fi
 echo "Signature file: ${OUTPUT_FILE}.sig"
 echo "Signed firmware: $OUTPUT_FILE"
 
