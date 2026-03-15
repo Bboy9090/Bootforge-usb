@@ -18,6 +18,7 @@ pub struct DeviceInfo {
     pub mode: DeviceMode,
     pub fingerprint: DeviceFingerprint,
     pub recommended_workflow: WorkflowRecommendation,
+    pub matched_profile: Option<String>,
 }
 
 /// Device operating mode
