@@ -1,6 +1,14 @@
 //! bootforge-cli: Command-line interface for USB device detection
 
-use libbootforge::{scan_devices, DeviceInfo, DeviceMode, DevicePlatform};
+use libbootforge::{
+    scan_devices,
+    session::{
+        history::{create_device_event, DeviceEventType},
+        log::SessionLog,
+        report::{create_scan_report, write_scan_report_json},
+    },
+    DeviceInfo, DeviceMode, DevicePlatform,
+};
 use std::collections::HashSet;
 use std::env;
 use std::fs;
