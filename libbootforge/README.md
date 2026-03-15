@@ -208,7 +208,73 @@ cargo run --bin bootforge-cli -- --apple --mode recovery
 cargo run --bin bootforge-cli -- --watch
 ```
 
-## Fingerprinting and Workflow Detection
+## Known Device Profiles
+
+libbootforge includes a built-in database of known devices with expected characteristics:
+
+- **Apple Devices**: DFU mode (0x05ac:0x1227), Recovery mode (0x05ac:0x1281), Normal mode (0x05ac:0x12a8)
+- **Android Devices**: Google Fastboot (0x18d1:0x4ee7), Google ADB (0x18d1:0x4ee1)
+- **Samsung Devices**: ADB (0x04e8:0x6860), Bootloader/Odin (0x04e8:0x685d)
+- **Storage Devices**: SanDisk USB drives (0x0781:*)
+- **Peripherals**: Logitech devices (0x046d:*)
+
+When a device matches a known profile, the CLI displays the profile name and expected workflow.
+
+## Session Logging
+
+Session logging tracks device events over time, creating a history of what happened during a scan or watch session.
+
+**Single Scan Session:**
+```bash
+bootforge-cli --session-log scan.json
+```
+
+Creates a session log with `Rescanned` events for all detected devices.
+
+**Watch Mode Session:**
+```bash
+bootforge-cli --watch --session-log session.json
+```
+
+Records `Connected` and `Disconnected` events in real-time as devices are added or removed.
+
+**Session Log Format:**
+```json
+{
+  "session_id": "session_20240315T123045Z",
+  "started_at": "2024-03-15T12:30:45Z",
+  "ended_at": "2024-03-15T12:35:10Z",
+  "events": [
+    {
+      "timestamp": "2024-03-15T12:30:50Z",
+      "event_type": "Connected",
+      "device": { ... }
+    }
+  ]
+}
+```
+
+## Report Export
+
+Generate structured scan reports with device snapshots:
+
+```bash
+bootforge-cli --report-file report.json
+```
+
+**Report Format:**
+```json
+{
+  "generated_at": "2024-03-15T12:30:45Z",
+  "total_devices": 3,
+  "devices": [ ... ]
+}
+```
+
+Reports can be filtered before export:
+```bash
+bootforge-cli --apple --mode recovery --report-file recovery_report.json
+```
 
 libbootforge provides intelligent device fingerprinting and workflow recommendations:
 
