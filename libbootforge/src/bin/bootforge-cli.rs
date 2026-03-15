@@ -333,22 +333,25 @@ fn main() {
             eprintln!("Error writing report file: {}", e);
             std::process::exit(1);
         }
-        println!("Wrote scan report with {} devices to {}", report.total_devices, path);
+        println!(
+            "Wrote scan report with {} devices to {}",
+            report.total_devices, path
+        );
         return;
     }
 
     // Handle session log export (single scan)
     if let Some(path) = &options.session_log {
         let mut session_log = SessionLog::new();
-        
+
         // Add rescanned events for all found devices
         for device in &filtered_devices {
             let event = create_device_event(DeviceEventType::Rescanned, device.clone());
             session_log.add_event(event);
         }
-        
+
         session_log.close();
-        
+
         let json = match serde_json::to_string_pretty(&session_log) {
             Ok(j) => j,
             Err(e) => {
@@ -356,13 +359,17 @@ fn main() {
                 std::process::exit(1);
             }
         };
-        
+
         if let Err(e) = fs::write(path, json) {
             eprintln!("Error writing session log: {}", e);
             std::process::exit(1);
         }
-        
-        println!("Wrote session log with {} events to {}", session_log.events.len(), path);
+
+        println!(
+            "Wrote session log with {} events to {}",
+            session_log.events.len(),
+            path
+        );
         return;
     }
 

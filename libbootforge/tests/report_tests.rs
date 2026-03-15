@@ -37,7 +37,11 @@ fn create_test_device() -> DeviceInfo {
 
 #[test]
 fn test_create_scan_report_total_devices() {
-    let devices = vec![create_test_device(), create_test_device(), create_test_device()];
+    let devices = vec![
+        create_test_device(),
+        create_test_device(),
+        create_test_device(),
+    ];
     let report = create_scan_report(devices);
     assert_eq!(report.total_devices, 3);
     assert_eq!(report.devices.len(), 3);
@@ -65,7 +69,7 @@ fn test_session_log_add_event() {
     let mut log = SessionLog::new();
     let device = create_test_device();
     let event = create_device_event(DeviceEventType::Connected, device);
-    
+
     log.add_event(event);
     assert_eq!(log.events.len(), 1);
     assert_eq!(log.events[0].event_type, DeviceEventType::Connected);
@@ -75,7 +79,7 @@ fn test_session_log_add_event() {
 fn test_session_log_close() {
     let mut log = SessionLog::new();
     assert!(log.ended_at.is_none());
-    
+
     log.close();
     assert!(log.ended_at.is_some());
     assert!(!log.ended_at.as_ref().unwrap().is_empty());
@@ -85,15 +89,15 @@ fn test_session_log_close() {
 fn test_session_log_multiple_events() {
     let mut log = SessionLog::new();
     let device = create_test_device();
-    
+
     let event1 = create_device_event(DeviceEventType::Connected, device.clone());
     let event2 = create_device_event(DeviceEventType::Rescanned, device.clone());
     let event3 = create_device_event(DeviceEventType::Disconnected, device);
-    
+
     log.add_event(event1);
     log.add_event(event2);
     log.add_event(event3);
-    
+
     assert_eq!(log.events.len(), 3);
 }
 
@@ -109,7 +113,7 @@ fn test_scan_report_preserves_device_info() {
     let device = create_test_device();
     let devices = vec![device.clone()];
     let report = create_scan_report(devices);
-    
+
     assert_eq!(report.devices[0].vendor_id, device.vendor_id);
     assert_eq!(report.devices[0].product_id, device.product_id);
     assert_eq!(report.devices[0].platform, device.platform);
