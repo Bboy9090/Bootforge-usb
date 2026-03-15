@@ -36,43 +36,61 @@ libbootforge
         ├── USB detection
         ├── descriptor reading
         ├── device mode detection
+        ├── device fingerprinting
+        ├── workflow recommendations
         └── device event monitoring
 ```
 
 ## Usage
 
-### Basic Device Enumeration
+### Library API
+
+#### Basic Device Scanning
 
 ```rust
-use libbootforge::enumerate_devices;
+use libbootforge::scan_devices;
 
-// Enumerate all connected USB devices
-let devices = enumerate_devices()?;
+// Scan all connected USB devices
+let devices = scan_devices()?;
 
 for device in devices {
     println!("Device: {:04x}:{:04x}", device.vendor_id, device.product_id);
-    if let Some(name) = device.product_name {
-        println!("  Name: {}", name);
-    }
-    println!("  Mode: {:?}", device.device_mode);
+    println!("  Platform: {:?}", device.platform);
+    println!("  Mode: {:?}", device.mode);
+    println!("  Family: {:?}", device.fingerprint.family);
+    println!("  Workflow: {:?}", device.recommended_workflow);
 }
 ```
 
-### Device Mode Detection
+#### JSON Output
 
 ```rust
-use libbootforge::{DeviceMode, enumerate_devices};
+use libbootforge::scan_devices_json;
 
-let devices = enumerate_devices()?;
+// Get device list as JSON
+let json = scan_devices_json()?;
+println!("{}", json);
+```
+
+#### Device Mode Detection
+
+```rust
+use libbootforge::scan_devices;
+
+let devices = scan_devices()?;
 
 for device in devices {
-    if device.device_mode.is_special_mode() {
-        println!("Device in special mode: {:?}", device.device_mode);
+    match device.mode {
+        DeviceMode::Recovery => println!("Device in recovery mode"),
+        DeviceMode::Dfu => println!("Device in DFU mode"),
+        DeviceMode::Fastboot => println!("Device in fastboot mode"),
+        DeviceMode::Adb => println!("Device in ADB mode"),
+        _ => {}
     }
 }
 ```
 
-### Event Monitoring
+#### Event Monitoring
 
 ```rust
 use libbootforge::DeviceEventMonitor;
@@ -96,6 +114,72 @@ loop {
         }
     }
 }
+```
+
+### CLI Usage
+
+The `bootforge-cli` tool provides command-line access to all library features:
+
+#### Basic Usage
+
+```bash
+# List all USB devices
+bootforge-cli
+
+# Output in JSON format
+bootforge-cli --json
+
+# Write JSON to file
+bootforge-cli --json-file devices.json
+```
+
+#### Filtering
+
+```bash
+# Show only Apple devices
+bootforge-cli --apple
+
+# Show only Android devices
+bootforge-cli --android
+
+# Filter by device mode
+bootforge-cli --mode recovery
+bootforge-cli --mode dfu
+
+# Filter by vendor ID (hex)
+bootforge-cli --vendor 05ac
+```
+
+#### Watch Mode
+
+```bash
+# Monitor for device connections/disconnections in real-time
+bootforge-cli --watch
+
+# Watch for Apple devices only
+bootforge-cli --watch --apple
+
+# Watch for devices in recovery mode
+bootforge-cli --watch --mode recovery
+```
+
+#### Examples
+
+```bash
+# List all devices in human-readable format
+cargo run --example list_devices
+
+# List all devices in JSON format
+cargo run --example list_devices_json
+
+# Run CLI tool
+cargo run --bin bootforge-cli
+
+# Filter for Apple devices in recovery mode
+cargo run --bin bootforge-cli -- --apple --mode recovery
+
+# Watch for any device changes
+cargo run --bin bootforge-cli -- --watch
 ```
 
 ## Platform Support
