@@ -10,6 +10,8 @@ use std::time::Duration;
 struct CliOptions {
     json_output: bool,
     json_file: Option<String>,
+    report_file: Option<String>,
+    session_log: Option<String>,
     watch: bool,
     apple_only: bool,
     android_only: bool,
