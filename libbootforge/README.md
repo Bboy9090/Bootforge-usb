@@ -14,6 +14,9 @@ The library provides structured access to USB device information including:
 - **Transport detection** - USB 2.0 vs USB 3.0 identification
 - **Device fingerprinting** - Identify device family (iPhone, iPad, Android Phone, etc.) with confidence levels
 - **Workflow recommendations** - Suggest appropriate repair/inspection workflows
+- **Known device profiles** - Built-in database of common devices with expected behaviors
+- **Session logging** - Track device connection/disconnection events over time
+- **Scan reports** - Generate exportable device scan reports
 - **Device connection events** - Monitor for USB device connect/disconnect events
 - **JSON output** - Export device information in JSON format
 - **CLI tool** - Comprehensive command-line interface with filtering and watch mode
