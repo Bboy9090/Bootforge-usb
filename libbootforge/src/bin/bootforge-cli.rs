@@ -219,6 +219,10 @@ fn print_devices_human(devices: &[DeviceInfo]) {
             "  Recommended Workflow   : {:?}",
             device.recommended_workflow
         );
+        println!(
+            "  Matched Profile        : {}",
+            device.matched_profile.as_deref().unwrap_or("Unknown")
+        );
         println!();
     }
 }
