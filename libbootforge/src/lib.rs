@@ -15,6 +15,7 @@
 
 pub mod detect;
 pub mod error;
+pub mod session;
 pub mod types;
 
 // Keep old modules for backward compatibility
