@@ -9,6 +9,7 @@ use super::classifier::{
     classify_mode, classify_platform, classify_transport, classify_vendor_name,
 };
 use super::fingerprint::{fingerprint_device, recommend_workflow};
+use super::profiles::match_known_profile;
 
 /// Scan all USB devices and return detailed information
 pub fn scan_devices() -> Result<Vec<DeviceInfo>> {
