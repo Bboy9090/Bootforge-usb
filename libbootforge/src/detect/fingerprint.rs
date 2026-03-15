@@ -84,10 +84,10 @@ fn fingerprint_apple_device(
 }
 
 fn fingerprint_android_device(
-    vendor_id: u16,
-    product_id: u16,
+    _vendor_id: u16,
+    _product_id: u16,
     product_name: Option<&str>,
-    manufacturer: Option<&str>,
+    _manufacturer: Option<&str>,
     mode: &DeviceMode,
 ) -> DeviceFingerprint {
     // Check if it's a tablet
