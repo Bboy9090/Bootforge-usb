@@ -276,6 +276,8 @@ Reports can be filtered before export:
 bootforge-cli --apple --mode recovery --report-file recovery_report.json
 ```
 
+## Fingerprinting and Workflow Detection
+
 libbootforge provides intelligent device fingerprinting and workflow recommendations:
 
 - **Device Family Identification**: Automatically identifies device families (iPhone, iPad, Android Phone, Android Tablet, USB Storage, Peripheral)
