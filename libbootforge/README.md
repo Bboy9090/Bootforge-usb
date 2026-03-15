@@ -385,10 +385,8 @@ cargo run --example list_devices_json
 ### Running CLI
 
 ```bash
-# Basic usage
+# Run CLI
 cargo run --bin bootforge-cli
-
-# With filtering
 cargo run --bin bootforge-cli -- --apple
 cargo run --bin bootforge-cli -- --mode recovery
 cargo run --bin bootforge-cli -- --vendor 05ac
@@ -397,8 +395,13 @@ cargo run --bin bootforge-cli -- --vendor 05ac
 cargo run --bin bootforge-cli -- --json
 cargo run --bin bootforge-cli -- --json-file devices.json
 
+# Reports and sessions
+cargo run --bin bootforge-cli -- --report-file report.json
+cargo run --bin bootforge-cli -- --session-log session.json
+
 # Watch mode
 cargo run --bin bootforge-cli -- --watch
+cargo run --bin bootforge-cli -- --watch --session-log session.json
 ```
 
 Note: Tests requiring USB hardware access are marked with `#[ignore]` to allow CI testing.
