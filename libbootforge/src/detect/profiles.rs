@@ -138,9 +138,7 @@ pub fn match_known_profile(device: &DeviceInfo) -> Option<KnownDeviceProfile> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{
-        DeviceFamily, DeviceFingerprint, DeviceTransport, FingerprintConfidence,
-    };
+    use crate::types::{DeviceFamily, DeviceFingerprint, DeviceTransport, FingerprintConfidence};
 
     fn create_test_device(vendor_id: u16, product_id: u16) -> DeviceInfo {
         DeviceInfo {
