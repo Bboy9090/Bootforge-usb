@@ -25,6 +25,8 @@ impl CliOptions {
         let mut options = CliOptions {
             json_output: false,
             json_file: None,
+            report_file: None,
+            session_log: None,
             watch: false,
             apple_only: false,
             android_only: false,
@@ -42,6 +44,24 @@ impl CliOptions {
                         options.json_file = Some(args[i].clone());
                     } else {
                         eprintln!("Error: --json-file requires a path argument");
+                        std::process::exit(1);
+                    }
+                }
+                "--report-file" => {
+                    i += 1;
+                    if i < args.len() {
+                        options.report_file = Some(args[i].clone());
+                    } else {
+                        eprintln!("Error: --report-file requires a path argument");
+                        std::process::exit(1);
+                    }
+                }
+                "--session-log" => {
+                    i += 1;
+                    if i < args.len() {
+                        options.session_log = Some(args[i].clone());
+                    } else {
+                        eprintln!("Error: --session-log requires a path argument");
                         std::process::exit(1);
                     }
                 }
