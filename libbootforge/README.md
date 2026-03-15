@@ -182,6 +182,60 @@ cargo run --bin bootforge-cli -- --apple --mode recovery
 cargo run --bin bootforge-cli -- --watch
 ```
 
+## Fingerprinting and Workflow Detection
+
+libbootforge provides intelligent device fingerprinting and workflow recommendations:
+
+- **Device Family Identification**: Automatically identifies device families (iPhone, iPad, Android Phone, Android Tablet, USB Storage, Peripheral)
+- **Confidence Levels**: Assigns confidence levels (High, Medium, Low) to fingerprints based on available information
+- **Workflow Recommendations**: Suggests appropriate inspection or repair workflows based on device characteristics
+
+Example output:
+
+```
+Bus 001 Device 002 ID 05ac:1281
+  Vendor ID              : 05ac
+  Product ID             : 1281
+  Vendor Name            : Apple
+  Manufacturer           : Apple Inc.
+  Product                : iPhone
+  Platform               : Apple
+  Transport              : Usb2
+  Mode                   : Recovery
+  Fingerprint Family     : IPhone
+  Model Hint             : iPhone
+  Fingerprint Confidence : High
+  Recommended Workflow   : AppleRecoveryWorkflow
+```
+
+**Note**: Workflow recommendations are advisory only and not guarantees. Always verify device state before performing any operations.
+
+## Supported Vendors
+
+libbootforge includes built-in vendor identification for:
+
+- **Apple** (0x05ac)
+- **Google** (0x18d1)
+- **Samsung** (0x04e8)
+- **Sony** (0x0fce)
+- **OnePlus** (0x2a70)
+- **Huawei** (0x12d1)
+- **OPPO** (0x22d9)
+- **Xiaomi** (0x2717)
+- **Realtek** (0x0bda)
+- **SanDisk** (0x0781)
+- **Logitech** (0x046d)
+
+## Supported Device Modes
+
+- **Normal** - Standard operating mode
+- **Recovery** - Device recovery mode (Apple, Android)
+- **DFU** - Device Firmware Update mode (Apple)
+- **Bootloader** - Bootloader mode (Android)
+- **Fastboot** - Fastboot mode (Android)
+- **ADB** - Android Debug Bridge mode
+- **MassStorage** - USB mass storage mode
+
 ## Platform Support
 
 | Platform | Status | Notes |
@@ -189,6 +243,8 @@ cargo run --bin bootforge-cli -- --watch
 | Linux | ✅ Supported | Includes sysfs path enrichment |
 | macOS | ✅ Supported | IOKit enrichment planned |
 | Windows | ✅ Supported | SetupAPI enrichment planned |
+
+**Note**: Some device information may require elevated permissions on macOS and Linux.
 
 ## Compliance & Safety
 
