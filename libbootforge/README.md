@@ -265,11 +265,46 @@ libbootforge is **read-only**:
 ## Testing
 
 ```bash
-# Run non-USB tests (work in CI)
-cargo test --package libbootforge
+# Format code
+cargo fmt
 
-# Run all tests including USB tests (requires USB hardware access)
-cargo test --package libbootforge -- --ignored --test-threads=1
+# Run tests (non-USB tests work in CI)
+cargo test
+
+# Check for errors
+cargo check
+
+# Run all tests including USB hardware tests
+cargo test -- --ignored --test-threads=1
+```
+
+### Running Examples
+
+```bash
+# List devices in human-readable format
+cargo run --example list_devices
+
+# List devices in JSON format
+cargo run --example list_devices_json
+```
+
+### Running CLI
+
+```bash
+# Basic usage
+cargo run --bin bootforge-cli
+
+# With filtering
+cargo run --bin bootforge-cli -- --apple
+cargo run --bin bootforge-cli -- --mode recovery
+cargo run --bin bootforge-cli -- --vendor 05ac
+
+# JSON output
+cargo run --bin bootforge-cli -- --json
+cargo run --bin bootforge-cli -- --json-file devices.json
+
+# Watch mode
+cargo run --bin bootforge-cli -- --watch
 ```
 
 Note: Tests requiring USB hardware access are marked with `#[ignore]` to allow CI testing.
