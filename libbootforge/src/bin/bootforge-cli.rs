@@ -175,10 +175,7 @@ fn print_devices_human(devices: &[DeviceInfo]) {
         println!("  Platform               : {:?}", device.platform);
         println!("  Transport              : {:?}", device.transport);
         println!("  Mode                   : {:?}", device.mode);
-        println!(
-            "  Fingerprint Family     : {:?}",
-            device.fingerprint.family
-        );
+        println!("  Fingerprint Family     : {:?}", device.fingerprint.family);
         println!(
             "  Model Hint             : {}",
             device
@@ -248,10 +245,7 @@ fn watch_devices(options: &CliOptions) -> Result<(), Box<dyn std::error::Error>>
                 );
                 println!("    Mode              : {:?}", device.mode);
                 println!("    Family            : {:?}", device.fingerprint.family);
-                println!(
-                    "    Recommended Action: {:?}",
-                    device.recommended_workflow
-                );
+                println!("    Recommended Action: {:?}", device.recommended_workflow);
                 println!();
             }
         }

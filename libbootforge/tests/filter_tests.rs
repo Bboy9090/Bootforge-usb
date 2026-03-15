@@ -20,10 +20,7 @@ fn filter_by_vendor(devices: Vec<DeviceInfo>, vendor_id: u16) -> Vec<DeviceInfo>
 
 /// Helper function to filter by mode
 fn filter_by_mode(devices: Vec<DeviceInfo>, mode: DeviceMode) -> Vec<DeviceInfo> {
-    devices
-        .into_iter()
-        .filter(|d| d.mode == mode)
-        .collect()
+    devices.into_iter().filter(|d| d.mode == mode).collect()
 }
 
 #[test]

@@ -1,8 +1,8 @@
 //! USB device enumeration
 
 use crate::{
-    device::{DeviceInfo, DeviceMode},
     descriptors::DeviceDescriptor,
+    device::{DeviceInfo, DeviceMode},
     Result,
 };
 use std::time::Duration;
@@ -79,9 +79,10 @@ fn read_string_descriptors(
         Err(_) => return (None, None, None),
     };
 
-    let manufacturer = DeviceDescriptor::read_string_descriptor(&handle, manufacturer_index, timeout)
-        .ok()
-        .flatten();
+    let manufacturer =
+        DeviceDescriptor::read_string_descriptor(&handle, manufacturer_index, timeout)
+            .ok()
+            .flatten();
 
     let product_name = DeviceDescriptor::read_string_descriptor(&handle, product_index, timeout)
         .ok()

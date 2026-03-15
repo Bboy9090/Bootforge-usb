@@ -53,14 +53,18 @@ impl DeviceDescriptor {
         let dev_ver = device_desc.device_version();
 
         Ok(DeviceDescriptor {
-            usb_version: usb_ver.major() as u16 * 256 + usb_ver.minor() as u16 * 16 + usb_ver.sub_minor() as u16,
+            usb_version: usb_ver.major() as u16 * 256
+                + usb_ver.minor() as u16 * 16
+                + usb_ver.sub_minor() as u16,
             device_class: device_desc.class_code(),
             device_subclass: device_desc.sub_class_code(),
             device_protocol: device_desc.protocol_code(),
             max_packet_size: device_desc.max_packet_size(),
             vendor_id: device_desc.vendor_id(),
             product_id: device_desc.product_id(),
-            device_version: dev_ver.major() as u16 * 256 + dev_ver.minor() as u16 * 16 + dev_ver.sub_minor() as u16,
+            device_version: dev_ver.major() as u16 * 256
+                + dev_ver.minor() as u16 * 16
+                + dev_ver.sub_minor() as u16,
             manufacturer_index: device_desc.manufacturer_string_index().unwrap_or(0),
             product_index: device_desc.product_string_index().unwrap_or(0),
             serial_number_index: device_desc.serial_number_string_index().unwrap_or(0),

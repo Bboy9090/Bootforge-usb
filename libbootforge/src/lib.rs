@@ -18,8 +18,8 @@ pub mod error;
 pub mod types;
 
 // Keep old modules for backward compatibility
-pub mod device;
 pub mod descriptors;
+pub mod device;
 pub mod enumeration;
 pub mod events;
 

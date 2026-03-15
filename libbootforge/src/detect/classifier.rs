@@ -47,18 +47,18 @@ pub fn classify_mode(vendor_id: u16, product_id: u16) -> DeviceMode {
         (0x05ac, 0x12a8) => DeviceMode::Normal,
         (0x05ac, 0x1281) => DeviceMode::Recovery,
         (0x05ac, 0x1227) => DeviceMode::Dfu,
-        
+
         // Google/Android modes
         (0x18d1, 0x4ee7) => DeviceMode::Fastboot,
         (0x18d1, 0x4ee1) => DeviceMode::Adb,
-        
+
         // Samsung modes
         (0x04e8, 0x6860) => DeviceMode::Adb,
         (0x04e8, 0x685d) => DeviceMode::Bootloader,
-        
+
         // Storage devices
         (0x0781, _) => DeviceMode::MassStorage,
-        
+
         _ => DeviceMode::Unknown,
     }
 }

@@ -55,7 +55,9 @@ fn fingerprint_apple_device(
     mode: &DeviceMode,
 ) -> DeviceFingerprint {
     let (family, confidence) = match mode {
-        DeviceMode::Recovery | DeviceMode::Dfu => (DeviceFamily::IPhone, FingerprintConfidence::High),
+        DeviceMode::Recovery | DeviceMode::Dfu => {
+            (DeviceFamily::IPhone, FingerprintConfidence::High)
+        }
         DeviceMode::Normal => {
             // Try to determine from product name
             if let Some(name) = product_name {
@@ -197,7 +199,13 @@ mod tests {
 
     #[test]
     fn test_apple_dfu_fingerprint() {
-        let fp = fingerprint_device(0x05ac, 0x1227, Some("iPhone"), Some("Apple Inc."), &DeviceMode::Dfu);
+        let fp = fingerprint_device(
+            0x05ac,
+            0x1227,
+            Some("iPhone"),
+            Some("Apple Inc."),
+            &DeviceMode::Dfu,
+        );
         assert_eq!(fp.family, DeviceFamily::IPhone);
         assert_eq!(fp.confidence, FingerprintConfidence::High);
     }
@@ -239,7 +247,8 @@ mod tests {
             &DeviceMode::MassStorage,
         );
         assert_eq!(fp.family, DeviceFamily::UsbStorage);
-        let workflow = recommend_workflow(&DevicePlatform::GenericUsb, &DeviceMode::MassStorage, &fp);
+        let workflow =
+            recommend_workflow(&DevicePlatform::GenericUsb, &DeviceMode::MassStorage, &fp);
         assert_eq!(workflow, WorkflowRecommendation::MassStorageInspection);
     }
 
@@ -254,6 +263,9 @@ mod tests {
         );
         assert_eq!(fp.family, DeviceFamily::Peripheral);
         let workflow = recommend_workflow(&DevicePlatform::GenericUsb, &DeviceMode::Unknown, &fp);
-        assert_eq!(workflow, WorkflowRecommendation::GenericPeripheralInspection);
+        assert_eq!(
+            workflow,
+            WorkflowRecommendation::GenericPeripheralInspection
+        );
     }
 }

@@ -5,7 +5,9 @@ use crate::types::DeviceInfo;
 use rusb::{Context, Device, DeviceHandle, UsbContext};
 use std::time::Duration;
 
-use super::classifier::{classify_mode, classify_platform, classify_transport, classify_vendor_name};
+use super::classifier::{
+    classify_mode, classify_platform, classify_transport, classify_vendor_name,
+};
 use super::fingerprint::{fingerprint_device, recommend_workflow};
 
 /// Scan all USB devices and return detailed information
@@ -35,10 +37,10 @@ fn read_device_info(device: &Device<Context>) -> Result<DeviceInfo> {
     let vendor_id = device_desc.vendor_id();
     let product_id = device_desc.product_id();
     let usb_version = device_desc.usb_version();
-    
+
     // Convert USB version to BCD format
-    let usb_version_bcd = (usb_version.major() as u16) << 8 
-        | (usb_version.minor() as u16) << 4 
+    let usb_version_bcd = (usb_version.major() as u16) << 8
+        | (usb_version.minor() as u16) << 4
         | (usb_version.sub_minor() as u16);
 
     // Read string descriptors

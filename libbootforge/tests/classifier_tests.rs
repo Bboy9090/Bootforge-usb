@@ -1,7 +1,9 @@
 //! Tests for device classification logic
 
 use libbootforge::{
-    detect::classifier::{classify_mode, classify_platform, classify_transport, classify_vendor_name},
+    detect::classifier::{
+        classify_mode, classify_platform, classify_transport, classify_vendor_name,
+    },
     DeviceMode, DevicePlatform, DeviceTransport,
 };
 
