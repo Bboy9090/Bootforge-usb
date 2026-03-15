@@ -326,6 +326,46 @@ fn main() {
 
     let filtered_devices = filter_devices(devices, &options);
 
+    // Handle report file export
+    if let Some(path) = &options.report_file {
+        let report = create_scan_report(filtered_devices.clone());
+        if let Err(e) = write_scan_report_json(path, &report) {
+            eprintln!("Error writing report file: {}", e);
+            std::process::exit(1);
+        }
+        println!("Wrote scan report with {} devices to {}", report.total_devices, path);
+        return;
+    }
+
+    // Handle session log export (single scan)
+    if let Some(path) = &options.session_log {
+        let mut session_log = SessionLog::new();
+        
+        // Add rescanned events for all found devices
+        for device in &filtered_devices {
+            let event = create_device_event(DeviceEventType::Rescanned, device.clone());
+            session_log.add_event(event);
+        }
+        
+        session_log.close();
+        
+        let json = match serde_json::to_string_pretty(&session_log) {
+            Ok(j) => j,
+            Err(e) => {
+                eprintln!("Error serializing session log: {}", e);
+                std::process::exit(1);
+            }
+        };
+        
+        if let Err(e) = fs::write(path, json) {
+            eprintln!("Error writing session log: {}", e);
+            std::process::exit(1);
+        }
+        
+        println!("Wrote session log with {} events to {}", session_log.events.len(), path);
+        return;
+    }
+
     // Handle JSON file export
     if let Some(path) = &options.json_file {
         if let Err(e) = write_devices_json(&filtered_devices, path) {
