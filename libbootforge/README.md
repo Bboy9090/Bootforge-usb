@@ -6,10 +6,17 @@ libbootforge is a low-level USB device detection library designed for hardware d
 
 The library provides structured access to USB device information including:
 
+- **USB device scanning** - Enumerate all connected USB devices
 - **Vendor and product identifiers** - VID/PID for device identification
 - **Device descriptors** - USB device, configuration, and string descriptors
-- **Device mode detection** - Automatic detection of DFU, Recovery, and other special modes
+- **Device mode detection** - Automatic detection of DFU, Recovery, Fastboot, ADB, and other special modes
+- **Platform classification** - Apple, Android, Generic USB device categorization
+- **Transport detection** - USB 2.0 vs USB 3.0 identification
+- **Device fingerprinting** - Identify device family (iPhone, iPad, Android Phone, etc.) with confidence levels
+- **Workflow recommendations** - Suggest appropriate repair/inspection workflows
 - **Device connection events** - Monitor for USB device connect/disconnect events
+- **JSON output** - Export device information in JSON format
+- **CLI tool** - Comprehensive command-line interface with filtering and watch mode
 
 libbootforge serves as the USB hardware discovery layer for the Bobby's Workshop device ecosystem.
 
