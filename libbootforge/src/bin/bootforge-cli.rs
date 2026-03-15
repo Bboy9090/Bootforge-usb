@@ -120,14 +120,16 @@ fn print_help() {
     println!("    bootforge-cli [OPTIONS]");
     println!();
     println!("OPTIONS:");
-    println!("    --json              Output in JSON format");
-    println!("    --json-file <path>  Write JSON output to file");
-    println!("    --watch             Watch for device changes in real-time");
-    println!("    --apple             Show only Apple devices");
-    println!("    --android           Show only Android devices");
-    println!("    --mode <mode>       Filter by device mode");
-    println!("    --vendor <id>       Filter by vendor ID (hex)");
-    println!("    --help              Show this help message");
+    println!("    --json                  Output in JSON format");
+    println!("    --json-file <path>      Write JSON output to file");
+    println!("    --report-file <path>    Write scan report to file");
+    println!("    --session-log <path>    Write session log to file");
+    println!("    --watch                 Watch for device changes in real-time");
+    println!("    --apple                 Show only Apple devices");
+    println!("    --android               Show only Android devices");
+    println!("    --mode <mode>           Filter by device mode");
+    println!("    --vendor <id>           Filter by vendor ID (hex)");
+    println!("    --help                  Show this help message");
     println!();
     println!("EXAMPLES:");
     println!("    bootforge-cli");
@@ -137,6 +139,9 @@ fn print_help() {
     println!("    bootforge-cli --vendor 05ac");
     println!("    bootforge-cli --watch");
     println!("    bootforge-cli --json-file devices.json");
+    println!("    bootforge-cli --report-file report.json");
+    println!("    bootforge-cli --session-log session.json");
+    println!("    bootforge-cli --watch --session-log session.json");
 }
 
 fn filter_devices(devices: Vec<DeviceInfo>, options: &CliOptions) -> Vec<DeviceInfo> {
