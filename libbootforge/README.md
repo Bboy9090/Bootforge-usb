@@ -164,6 +164,29 @@ bootforge-cli --watch --apple
 
 # Watch for devices in recovery mode
 bootforge-cli --watch --mode recovery
+
+# Watch and save session log
+bootforge-cli --watch --session-log session.json
+```
+
+#### Report Generation
+
+```bash
+# Generate and save scan report
+bootforge-cli --report-file report.json
+
+# Generate filtered report
+bootforge-cli --apple --report-file apple_devices.json
+```
+
+#### Session Logging
+
+```bash
+# Create session log from single scan
+bootforge-cli --session-log scan_session.json
+
+# Watch mode with session logging
+bootforge-cli --watch --session-log live_session.json
 ```
 
 #### Examples
