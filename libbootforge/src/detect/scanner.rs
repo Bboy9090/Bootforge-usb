@@ -70,6 +70,25 @@ fn read_device_info(device: &Device<Context>) -> Result<DeviceInfo> {
     // Recommend workflow
     let recommended_workflow = recommend_workflow(&platform, &mode, &fingerprint);
 
+    // Match known profile
+    let matched_profile = match_known_profile(&DeviceInfo {
+        bus_number: device.bus_number(),
+        address: device.address(),
+        vendor_id,
+        product_id,
+        vendor_name: vendor_name.clone(),
+        manufacturer: manufacturer.clone(),
+        product_name: product_name.clone(),
+        serial_number: serial_number.clone(),
+        platform,
+        transport,
+        mode,
+        fingerprint: fingerprint.clone(),
+        recommended_workflow,
+        matched_profile: None,
+    })
+    .map(|p| p.display_name);
+
     Ok(DeviceInfo {
         bus_number: device.bus_number(),
         address: device.address(),
@@ -84,6 +103,7 @@ fn read_device_info(device: &Device<Context>) -> Result<DeviceInfo> {
         mode,
         fingerprint,
         recommended_workflow,
+        matched_profile,
     })
 }
 
