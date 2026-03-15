@@ -50,7 +50,7 @@ pub fn fingerprint_device(
 }
 
 fn fingerprint_apple_device(
-    product_id: u16,
+    _product_id: u16,
     product_name: Option<&str>,
     mode: &DeviceMode,
 ) -> DeviceFingerprint {
