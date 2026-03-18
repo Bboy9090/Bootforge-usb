@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use chrono::Utc;
-use libbootforge::{DeviceInfo, DeviceMode, enumerate_devices};
+use libbootforge::{device::{DeviceInfo, DeviceMode}, enumerate_devices};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeviceProfile {
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_analyze_usb_device() {
-        use libbootforge::{DeviceInfo, DeviceMode};
+        use libbootforge::device::{DeviceInfo, DeviceMode};
 
         let device = DeviceInfo {
             vendor_id: 0x05ac,
@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_classify_dfu_device() {
-        use libbootforge::{DeviceInfo, DeviceMode};
+        use libbootforge::device::{DeviceInfo, DeviceMode};
 
         let device = DeviceInfo {
             vendor_id: 0x05ac,
