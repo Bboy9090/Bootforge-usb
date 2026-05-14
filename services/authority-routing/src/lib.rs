@@ -1,9 +1,8 @@
 // ForgeWorks Core - Authority Routing Service
 // COMPLIANCE-FIRST: Routes to external authority, never executes
 
-use serde::{Deserialize, Serialize};
 use legal_classification::{LegalClassification, RouteTarget};
-use device_analysis::RiskLevel;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RoutingPath {
@@ -33,7 +32,7 @@ pub enum AuthorizationStatus {
 
 /**
  * Route to OEM authority
- * 
+ *
  * This function identifies OEM routing pathways.
  * It does NOT contact OEMs or execute any actions.
  */
@@ -57,7 +56,7 @@ pub fn route_to_oem(device_brand: &str, _legal_status: &str) -> RoutingPath {
 
 /**
  * Route to carrier authority
- * 
+ *
  * This function identifies carrier unlock pathways.
  * It does NOT execute unlocks or bypass carrier locks.
  */
@@ -84,7 +83,7 @@ pub fn route_to_carrier(carrier: &str, jurisdiction: &str) -> RoutingPath {
 
 /**
  * Route to court system
- * 
+ *
  * This function identifies court order pathways.
  * It does NOT file court orders or provide legal advice.
  */
@@ -117,18 +116,11 @@ pub fn generate_routing_result(
     ownership_verified: bool,
 ) -> RoutingResult {
     let path = match classification.routing_instructions.route_to {
-        RouteTarget::OEM => {
-            route_to_oem("Unknown", &format!("{:?}", classification.status))
-        }
+        RouteTarget::OEM => route_to_oem("Unknown", &format!("{:?}", classification.status)),
         RouteTarget::Carrier => {
-            route_to_carrier(
-                "Unknown",
-                &format!("{:?}", classification.jurisdiction),
-            )
+            route_to_carrier("Unknown", &format!("{:?}", classification.jurisdiction))
         }
-        RouteTarget::CourtSystem => {
-            route_to_court(&format!("{:?}", classification.jurisdiction))
-        }
+        RouteTarget::CourtSystem => route_to_court(&format!("{:?}", classification.jurisdiction)),
         RouteTarget::ServiceCenter => RoutingPath {
             target: RouteTarget::ServiceCenter,
             contact_information: "Contact authorized service center".to_string(),
@@ -144,7 +136,7 @@ pub fn generate_routing_result(
             estimated_timeline: "Varies".to_string(),
         },
     };
-    
+
     RoutingResult {
         path: path.clone(),
         routing_reason: format!(
@@ -167,8 +159,8 @@ pub fn generate_routing_result(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use legal_classification::{Jurisdiction, LegalStatus, AuthorizationType};
     use device_analysis::RiskLevel;
+    use legal_classification::{AuthorizationType, Jurisdiction, LegalStatus};
 
     #[test]
     fn test_route_to_oem() {
@@ -179,7 +171,6 @@ mod tests {
 
     #[test]
     fn test_generate_routing_result() {
-        use device_analysis::RiskLevel;
         let classification = LegalClassification {
             status: LegalStatus::RequiresAuthorization,
             jurisdiction: Jurisdiction::US,
@@ -193,7 +184,7 @@ mod tests {
             },
             precedent_references: vec![],
         };
-        
+
         let result = generate_routing_result(&classification, true);
         assert_eq!(result.authorization_status, AuthorizationStatus::Required);
         assert!(!result.next_steps.is_empty());

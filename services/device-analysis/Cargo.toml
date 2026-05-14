@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 libbootforge = { path = "../../libbootforge" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.6", features = ["v4", "serde"] }
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.149"
+chrono = { version = "=0.4.44", features = ["serde"] }
+uuid = { version = "=1.23.1", features = ["v4", "serde"] }
 
 [dev-dependencies]
-rstest = "0.18"
+rstest = "=0.18.2"

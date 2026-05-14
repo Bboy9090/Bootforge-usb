@@ -21,11 +21,11 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/Bboy9090/Bootforge-usb"
 
 [workspace.dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.6", features = ["v4", "serde"] }
-thiserror = "1.0"
-anyhow = "1.0"
-log = "0.4"
-sha2 = "0.10"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.149"
+chrono = { version = "=0.4.44", features = ["serde"] }
+uuid = { version = "=1.23.1", features = ["v4", "serde"] }
+thiserror = "=1.0.69"
+anyhow = "=1.0.102"
+log = "=0.4.29"
+sha2 = "=0.10.9"

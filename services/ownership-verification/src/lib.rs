@@ -1,9 +1,9 @@
 // ForgeWorks Core - Ownership Verification Service
 // COMPLIANCE-FIRST: Verification only, no bypass
 
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
 use device_analysis::DeviceProfile;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OwnershipAttestation {
@@ -44,7 +44,7 @@ pub enum AuthorizationRequirement {
 
 /**
  * Verify ownership claim
- * 
+ *
  * This function verifies ownership through attestation.
  * It does NOT bypass any locks or security features.
  */
@@ -56,7 +56,7 @@ pub fn verify_ownership(
     let required_auth = determine_authorization_requirement(&confidence, device);
     let verified = confidence >= 0.85; // Threshold for verification
     let blocked = confidence < 0.50; // Too low = block
-    
+
     VerificationResult {
         verified,
         confidence,
@@ -66,10 +66,7 @@ pub fn verify_ownership(
     }
 }
 
-fn calculate_confidence(
-    attestation: &OwnershipAttestation,
-    device: &DeviceProfile,
-) -> f64 {
+fn calculate_confidence(attestation: &OwnershipAttestation, device: &DeviceProfile) -> f64 {
     // Base confidence from attestation type
     let base_confidence: f64 = match attestation.attestation_type {
         AttestationType::CourtOrder => 0.95,
@@ -79,7 +76,7 @@ fn calculate_confidence(
         AttestationType::InheritanceDocument => 0.75,
         AttestationType::GiftDocument => 0.70,
     };
-    
+
     // Adjust based on documentation quality
     let doc_quality: f64 = if attestation.documentation_references.is_empty() {
         0.5
@@ -88,7 +85,7 @@ fn calculate_confidence(
     } else {
         0.8
     };
-    
+
     // Adjust based on device classification (high-risk devices require higher confidence)
     let device_adjustment: f64 = match device.classification {
         device_analysis::DeviceClassification::ServiceModified => 0.7,
@@ -96,7 +93,7 @@ fn calculate_confidence(
         device_analysis::DeviceClassification::SoftwareModified => 0.9,
         _ => 1.0,
     };
-    
+
     let result: f64 = base_confidence * doc_quality * device_adjustment;
     if result > 1.0 {
         1.0
@@ -148,10 +145,14 @@ mod tests {
             user_id: "user123".to_string(),
             device_id: device.device_id.clone(),
             attestation_type: AttestationType::CourtOrder,
-            documentation_references: vec!["doc1".to_string(), "doc2".to_string()],
+            documentation_references: vec![
+                "doc1".to_string(),
+                "doc2".to_string(),
+                "doc3".to_string(),
+            ],
             timestamp: Utc::now(),
         };
-        
+
         let result = verify_ownership(&attestation, &device);
         assert!(result.verified);
         assert!(result.confidence >= 0.85);
@@ -167,7 +168,7 @@ mod tests {
             documentation_references: vec![],
             timestamp: Utc::now(),
         };
-        
+
         let result = verify_ownership(&attestation, &device);
         assert!(!result.verified || result.confidence < 0.85);
     }

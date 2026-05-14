@@ -7,7 +7,9 @@ pub struct RoleManager {
 
 impl RoleManager {
     pub fn new() -> Self {
-        RoleManager { roles: HashSet::new() }
+        RoleManager {
+            roles: HashSet::new(),
+        }
     }
 
     pub fn has_role(&self, role: &str) -> bool {

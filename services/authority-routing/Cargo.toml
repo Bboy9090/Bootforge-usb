@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.149"
+chrono = { version = "=0.4.44", features = ["serde"] }
 device-analysis = { path = "../device-analysis" }
 legal-classification = { path = "../legal-classification" }
 
 [dev-dependencies]
-rstest = "0.18"
+rstest = "=0.18.2"
