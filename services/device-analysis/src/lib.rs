@@ -1,9 +1,12 @@
 // ForgeWorks Core - Device Analysis Service
 // COMPLIANCE-FIRST: Analysis only, no execution
 
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
-use libbootforge::{device::{DeviceInfo, DeviceMode}, enumerate_devices};
+use libbootforge::{
+    device::{DeviceInfo, DeviceMode},
+    enumerate_devices,
+};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeviceProfile {
@@ -20,11 +23,11 @@ pub struct DeviceProfile {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum DeviceClassification {
-    Clean,                    // No modifications detected
-    SoftwareModified,         // Software-level modifications
-    HardwareModified,         // Hardware-level modifications
-    ServiceModified,          // Service-level modifications (IMEI, etc.)
-    Unknown,                  // Cannot determine
+    Clean,            // No modifications detected
+    SoftwareModified, // Software-level modifications
+    HardwareModified, // Hardware-level modifications
+    ServiceModified,  // Service-level modifications (IMEI, etc.)
+    Unknown,          // Cannot determine
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -85,14 +88,18 @@ pub fn analyze_usb_device(device: &DeviceInfo) -> DeviceProfile {
     let capability_class = determine_capability_class(&classification);
 
     DeviceProfile {
-        device_id: format!("{:04x}:{:04x}:{:03}:{:03}",
-            device.vendor_id,
-            device.product_id,
-            device.bus_number,
-            device.device_address
+        device_id: format!(
+            "{:04x}:{:04x}:{:03}:{:03}",
+            device.vendor_id, device.product_id, device.bus_number, device.device_address
         ),
-        model: device.product_name.clone().unwrap_or_else(|| "Unknown Device".to_string()),
-        manufacturer: device.manufacturer.clone().unwrap_or_else(|| "Unknown".to_string()),
+        model: device
+            .product_name
+            .clone()
+            .unwrap_or_else(|| "Unknown Device".to_string()),
+        manufacturer: device
+            .manufacturer
+            .clone()
+            .unwrap_or_else(|| "Unknown".to_string()),
         security_state: format!("Mode: {:?}", device.device_mode),
         capability_class,
         classification,
@@ -140,7 +147,7 @@ fn extract_manufacturer(metadata: &str) -> String {
 fn classify_from_metadata(metadata: &str) -> (DeviceClassification, RiskLevel) {
     // Mock classification - in production, use actual device state analysis
     let lower = metadata.to_lowercase();
-    
+
     if lower.contains("hardware") || lower.contains("checkm8") {
         (DeviceClassification::HardwareModified, RiskLevel::High)
     } else if lower.contains("service") || lower.contains("imei") {
@@ -156,9 +163,13 @@ fn classify_from_metadata(metadata: &str) -> (DeviceClassification, RiskLevel) {
 
 fn determine_capability_class(classification: &DeviceClassification) -> String {
     match classification {
-        DeviceClassification::HardwareModified => "Hardware-level modification detected".to_string(),
+        DeviceClassification::HardwareModified => {
+            "Hardware-level modification detected".to_string()
+        }
         DeviceClassification::ServiceModified => "Service-level modification detected".to_string(),
-        DeviceClassification::SoftwareModified => "Software-level modification detected".to_string(),
+        DeviceClassification::SoftwareModified => {
+            "Software-level modification detected".to_string()
+        }
         DeviceClassification::Clean => "No modifications detected".to_string(),
         DeviceClassification::Unknown => "Unable to determine modification status".to_string(),
     }
@@ -252,6 +263,9 @@ mod tests {
         };
 
         let profile = analyze_usb_device(&device);
-        assert_eq!(profile.classification, DeviceClassification::HardwareModified);
+        assert_eq!(
+            profile.classification,
+            DeviceClassification::HardwareModified
+        );
     }
 }

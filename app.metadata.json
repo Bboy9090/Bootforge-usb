@@ -1,0 +1,90 @@
+{
+  "package_id": "com.bobbysworld.bootforge",
+  "name": "BootForge",
+  "version": "3.0.0",
+  "description": "Cross-platform USB device detection and enumeration tool for diagnostic and read-only device analysis",
+  "author": "Bobby's World",
+  "license": "MIT OR Apache-2.0",
+  "homepage": "https://github.com/Bboy9090/Bootforge-usb",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bboy9090/Bootforge-usb.git"
+  },
+  "platform": {
+    "supported": ["linux", "macos", "windows"],
+    "minimum_versions": {
+      "linux": "Ubuntu 20.04 / Fedora 35 / Arch (rolling)",
+      "macos": "macOS 12 Monterey",
+      "windows": "Windows 10 (1903+)"
+    }
+  },
+  "capabilities": {
+    "usb_detection": true,
+    "device_enumeration": true,
+    "descriptor_reading": true,
+    "checksum_verification": true,
+    "dry_run_planning": true,
+    "audit_logging": true,
+    "device_writing": false,
+    "firmware_flashing": false,
+    "bootloader_unlock": false
+  },
+  "components": {
+    "libbootforge": {
+      "type": "library",
+      "language": "rust",
+      "description": "Core USB detection library"
+    },
+    "bootforge-cli": {
+      "type": "binary",
+      "language": "rust",
+      "description": "Command-line interface"
+    },
+    "services": {
+      "type": "microservices",
+      "language": "rust",
+      "description": "ForgeWorks compliance and analysis services"
+    }
+  },
+  "dependencies": {
+    "rust": "1.70+",
+    "libusb": "1.0+",
+    "platform_specific": {
+      "linux": ["libusb-1.0-dev", "pkg-config"],
+      "macos": ["native IOKit support"],
+      "windows": ["WinUSB or libusb-win32 driver"]
+    }
+  },
+  "build": {
+    "commands": {
+      "install": "cargo build --release",
+      "test": "cargo test",
+      "lint": "cargo clippy -- -D warnings",
+      "format": "cargo fmt"
+    }
+  },
+  "release": {
+    "artifacts": {
+      "linux": "bootforge-cli-linux-x86_64",
+      "macos": "bootforge-cli-macos-x86_64",
+      "windows": "bootforge-cli-windows-x86_64.exe"
+    },
+    "packaging": {
+      "windows_msix": true,
+      "macos_dmg": false,
+      "linux_deb": false,
+      "linux_rpm": false
+    }
+  },
+  "security": {
+    "read_only": true,
+    "no_root_required": true,
+    "audit_logging": true,
+    "hash_chain_verification": true
+  },
+  "metadata": {
+    "category": "Development Tools",
+    "tags": ["usb", "device-detection", "diagnostics", "read-only", "compliance"],
+    "keywords": ["usb", "enumeration", "libusb", "device", "hardware", "diagnostic"]
+  }
+}

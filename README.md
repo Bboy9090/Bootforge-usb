@@ -1,62 +1,16 @@
-# libbootforge
+# BootForge
 
-libbootforge is a low-level USB device detection library designed for hardware discovery, repair workflows, and device preparation.
-
-The library provides structured access to USB device information including:
-
-- vendor and product identifiers
-- device descriptors
-- device mode detection
-- device connection events
-
-libbootforge serves as the USB hardware discovery layer for the Bobby's Workshop device ecosystem.
-# BootForge USB — REFORGE OS Platform
+**BootForge** is a cross-platform USB device detection and enumeration tool for diagnostic and read-only device analysis. Built with Rust, it provides the foundational layer for the Blue Phoenix OS / Bobby's World device ecosystem.
 
 ## Overview
 
-**BootForge USB** is the cross-platform USB enumeration and device detection layer that powers the REFORGE OS platform (formerly Bobby's Workshop 3.0). Written in Rust, it provides diagnostic and read-only device analysis capabilities across Windows, macOS, and Linux.
+BootForge serves as the USB hardware discovery layer, providing:
+- USB device detection and descriptor reading
+- Vendor ID/Product ID identification
+- Protocol classification (ADB, Fastboot, MTP, Apple)
+- Platform-specific device path resolution
+- **Diagnostic and read-only operations only** — no device modification
 
-### Core Libraries
-- **libbootforge**: Low-level USB device detection library
-- **PhoenixCore**: Device engine (planned)
-- **BootForge CLI**: Command line tool (planned)
-- **Bobby's Workshop**: Platform UI
-
-### Architecture
-
-```
-Bobby's Workshop Platform
-        │
-        ▼
-PhoenixCore
-        │
-        ▼
-libbootforge
-        │
-        ├── USB detection
-        ├── descriptor reading
-        ├── device mode detection
-        └── device event monitoring
-```
-
-## ForgeWorks Platform
-
-### Layers
-- **Workshop (Public)**: Brand trust, education, and customer transparency. (`apps/workshop-ui`)
-- **ForgeWorks (Core)**: Decision engine, audit logging, and authority routing. (`services/*`, `apps/forgeworks-core`)
-- **Pandora Codex (Internal)**: Historical research and risk models. (`internal/pandora-codex`)
-
-### Services
-- `device-analysis`: Capability ceiling and modification classification.
-- `ownership-verification`: Confidence-based attestation engine.
-- `legal-classification`: Jurisdiction-aware status labeling.
-- `audit-logging`: Immutable, hash-chained activity trail.
-- `authority-routing`: OEM, carrier, and court-system pathways.
-
-### Manufacturing
-- `ForgeCore`: USB diagnostic bridge (EVT/DVT/PVT).
-- `Smart Thermal Platform`: Digitally controlled repair surfaces.
-- `Precision Tool Matrix`: Pro-grade calibrated toolsets.
 ### Architecture
 
 ```
@@ -69,176 +23,184 @@ libbootforge
           Hardware
 ```
 
-BootForge USB serves as the foundational layer for device enumeration, providing:
-- USB device detection and descriptor reading
-- Vendor ID/Product ID identification
-- Protocol classification (ADB, Fastboot, MTP, Apple)
-- Platform-specific device path resolution
-- **Diagnostic and read-only operations only** — no device modification
+## Quick Start
 
-REFORGE OS is a compliance-first, ownership-respecting platform for device analysis, classification, and routing. Built on a modular Rust architecture, it separates public certification and education from core diagnostic logic and internal research models.
-# libbootforge
+### Prerequisites
 
-libbootforge is a low-level USB device detection library designed for hardware discovery, repair workflows, and device preparation.
+- Rust 1.70+ (2021 edition)
+- libusb (platform-specific installation)
+- Git
 
-The library provides structured access to USB device information including:
+### Building
 
-- vendor and product identifiers
-- device descriptors
-- device mode detection
-- device connection events
+```bash
+# Clone repository
+git clone https://github.com/Bboy9090/Bootforge-usb.git
+cd Bootforge-usb
 
-libbootforge serves as the USB hardware discovery layer for the Bobby's Workshop device ecosystem.
+# Build entire workspace
+cargo build --release
 
----
+# Build libbootforge only
+cargo build -p libbootforge --release
 
-# Purpose
-
-Modern device repair and system recovery workflows require reliable identification of connected hardware.
-
-BootForge focuses on:
-
-* detecting connected USB devices
-* reading hardware descriptors
-* identifying device modes
-* exposing device information to higher-level tools
-
-This allows repair systems to correctly identify devices before performing operations such as flashing, diagnostics, or recovery.
-
----
-
-# Ecosystem Role
-
-BootForge acts as the **USB discovery layer** within the Bobby's Workshop device platform.
-
-```text
-Bobby's Workshop Platform
-        │
-        ▼
-PhoenixCore (device engine)
-        │
-        ▼
-libbootforge (USB detection layer)
-        │
-        ├── USB detection
-        ├── descriptor reading
-        ├── device mode detection
-        └── device event monitoring
+# Build CLI tool
+cargo build --bin bootforge-cli --release
 ```
 
-libbootforge ensures that higher-level systems can safely and accurately identify connected hardware.
+### Testing
 
----
+```bash
+# Run all tests
+cargo test
 
-# Core Capabilities
+# Run libbootforge tests only
+cargo test -p libbootforge
 
-### USB Device Detection
-
-Scan connected USB buses and identify active devices.
-
----
-
-### Hardware Descriptor Reading
-
-Extract detailed device information such as:
-
-* vendor ID
-* product ID
-* manufacturer
-* serial number
-* device class
-
----
-
-### Device Mode Identification
-
-Identify special device states such as:
-
-* recovery mode
-* DFU mode
-* bootloader mode
-* standard device mode
-
----
-
-### Platform Integration
-
-libbootforge can provide device information to:
-
-* repair platforms
-* flashing utilities
-* diagnostic environments
-* automation tools
-
----
-
-# Design Principles
-
-libbootforge follows three guiding principles.
-
-**Low-Level First**
-
-The system focuses on accurate hardware detection before higher-level workflows.
-
-**Platform Neutral**
-
-The tool is designed to support multiple operating systems and hardware environments.
-
-**Reliable Discovery**
-
-Device information must be consistent and trustworthy before repair actions are performed.
-
----
-
-# Potential Technology Stack
-
-libbootforge may incorporate technologies such as:
-
-* Rust
-* Python
-* libusb
-* system-level device APIs
-
-These technologies allow direct interaction with USB hardware layers.
-
----
-
-# Use Cases
-
-libbootforge can support workflows including:
-
-* device repair platforms
-* flashing preparation
-* hardware diagnostics
-* recovery mode detection
-* lab device management
-
----
-
-# Stack
-
-```text
-PhoenixCore      → device engine
-libbootforge     → USB detection library
-BootForge CLI    → user tool
-Bobby's Workshop  → platform interface
+# Run with USB hardware (requires connected devices)
+cargo test -- --ignored --test-threads=1
 ```
 
----
+### Running
 
-# Project Status
+```bash
+# List connected USB devices
+cargo run --bin bootforge-cli
 
-Prototype / early development.
+# Or use the built binary
+./target/release/bootforge-cli
+```
 
-Future improvements may include:
+## Core Components
 
-* device monitoring
-* event-based device detection
-* automatic device classification
-* integration with repair platforms
+### libbootforge
 
----
+Low-level USB device detection library providing:
+- Device scanning and enumeration
+- Descriptor extraction (vendor/product IDs, serial numbers)
+- Device mode classification (DFU, recovery, bootloader, normal)
+- Device fingerprinting with confidence levels
+- Session logging and audit trails
 
-# License
+**Location**: `libbootforge/`
 
-MIT License
+### ForgeWorks Services
+
+Compliance and analysis microservices:
+- **device-analysis**: Capability analysis and modification classification
+- **ownership-verification**: Confidence-based attestation engine
+- **legal-classification**: Jurisdiction-aware status labeling
+- **audit-logging**: Immutable, hash-chained activity trail
+- **authority-routing**: OEM, carrier, court system pathways
+- **auth**: SAML/OIDC authentication
+- **metrics**: Performance and compliance metrics
+
+**Location**: `services/*/`
+
+### Applications
+
+- **workshop-ui**: React + Tauri desktop application for device discovery UI
+- **forgeworks-core**: Tauri-based compliance engine frontend
+
+**Location**: `apps/*/`
+
+## Usage Examples
+
+```rust
+use libbootforge::detect::scanner::DeviceScanner;
+
+// Scan for USB devices
+let scanner = DeviceScanner::new();
+let devices = scanner.scan()?;
+
+for device in devices {
+    println!("Device: {} ({:04x}:{:04x})",
+        device.descriptor.product_name,
+        device.descriptor.vendor_id,
+        device.descriptor.product_id
+    );
+}
+```
+
+## Packaging
+
+See `packaging/README.md` for platform-specific packaging instructions:
+- Windows MSIX packaging
+- Blue Phoenix OS integration
+- Cross-platform distribution
+
+## Health Checks
+
+```bash
+# Verify USB detection and safe mode
+./scripts/healthcheck.sh
+
+# Run smoke tests (build + entrypoints)
+./scripts/smoke-test.sh
+```
+
+## Documentation
+
+- **[Product Requirements](docs/PRD.md)**: MVP features and scope
+- **[Roadmap](docs/ROADMAP.md)**: Future development plans
+- **[USB Discovery Model](docs/USB_DISCOVERY_MODEL.md)**: Technical architecture
+- **[Safe Write Policy](docs/SAFE_WRITE_POLICY.md)**: Read-only guarantees
+- **[Release Checklist](docs/RELEASE_CHECKLIST.md)**: Pre-release validation
+
+## Project Structure
+
+```
+Bootforge-usb/
+├── libbootforge/          # Core USB detection library
+├── services/              # ForgeWorks compliance services
+├── apps/                  # User-facing applications
+├── docs/                  # Documentation
+├── scripts/               # Build and health check scripts
+├── packaging/             # Platform packaging configs
+├── firmware/              # ForgeCore hardware tests
+├── manufacturing/         # Hardware BOM and QA
+└── governance/            # Compliance policies
+```
+
+## Platform Support
+
+- **Linux**: Full support (requires libusb-1.0)
+- **macOS**: Full support (built-in IOKit support)
+- **Windows**: Full support (WinUSB/libusb-win32)
+
+## Design Principles
+
+1. **Read-Only First**: Only reads device descriptors, never modifies hardware
+2. **Platform Neutral**: Cross-platform support via rusb/libusb
+3. **Compliance-First**: Ownership, consent, jurisdiction verification
+4. **Audit Everything**: Immutable audit trails for all operations
+
+## Known Limitations (MVP)
+
+- No destructive disk operations
+- No device firmware modification
+- No bootloader unlocking or bypass operations
+- Read-only USB enumeration and analysis only
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+```bash
+# Format code
+cargo fmt
+
+# Lint code
+cargo clippy
+
+# Run CI checks locally
+cargo build && cargo test && cargo fmt --check
+```
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for security policy and vulnerability reporting.
+
+## License
+
+Dual-licensed under MIT or Apache-2.0. See [LICENSE](LICENSE) for details.

@@ -1,15 +1,15 @@
 // ForgeWorks Core - CLI Entry Point
 // For testing the end-to-end flow
 
-use forgeworks_core::{process_device_flow, export_compliance_report};
-use ownership_verification::OwnershipAttestation;
-use ownership_verification::AttestationType;
-use legal_classification::Jurisdiction;
 use chrono::Utc;
+use forgeworks_core::{export_compliance_report, process_device_flow};
+use legal_classification::Jurisdiction;
+use ownership_verification::AttestationType;
+use ownership_verification::OwnershipAttestation;
 
 fn main() {
     println!("=== ForgeWorks Core - End-to-End Flow Test ===\n");
-    
+
     // Mock input data
     let device_metadata = "iPhone 13 Pro - Clean device";
     let ownership_attestation = OwnershipAttestation {
@@ -21,7 +21,7 @@ fn main() {
     };
     let jurisdiction = Jurisdiction::US;
     let actor = "user123";
-    
+
     // Process the flow
     let report = process_device_flow(
         device_metadata,
@@ -30,10 +30,10 @@ fn main() {
         actor,
         None,
     );
-    
+
     // Export JSON report
     let json_report = export_compliance_report(&report);
-    
+
     println!("✅ Device Analysis Complete");
     println!("✅ Ownership Verification Complete");
     println!("✅ Legal Classification Complete");
@@ -41,7 +41,7 @@ fn main() {
     println!("✅ Audit Logging Complete");
     println!("\n=== Compliance Report ===\n");
     println!("{}", json_report);
-    
+
     // Verify integrity
     if report.audit_integrity_verified {
         println!("\n✅ Audit integrity verified - Hash chain intact");

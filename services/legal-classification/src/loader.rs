@@ -21,18 +21,21 @@ pub struct JurisdictionMap {
  * Load jurisdiction map from JSON file
  */
 pub fn load_jurisdiction(code: &str) -> Result<JurisdictionMap, String> {
-    let file_path = format!("services/legal-classification/jurisdiction-map/{}.json", code.to_lowercase());
-    
+    let file_path = format!(
+        "services/legal-classification/jurisdiction-map/{}.json",
+        code.to_lowercase()
+    );
+
     if !Path::new(&file_path).exists() {
         return Err(format!("Jurisdiction map not found: {}", code));
     }
-    
+
     let contents = fs::read_to_string(&file_path)
         .map_err(|e| format!("Failed to read jurisdiction file: {}", e))?;
-    
+
     let map: JurisdictionMap = serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to parse jurisdiction JSON: {}", e))?;
-    
+
     Ok(map)
 }
 
@@ -42,13 +45,13 @@ pub fn load_jurisdiction(code: &str) -> Result<JurisdictionMap, String> {
 pub fn load_all_jurisdictions() -> HashMap<String, JurisdictionMap> {
     let codes = vec!["us", "eu", "uk", "ca", "au", "global"];
     let mut maps = HashMap::new();
-    
+
     for code in codes {
         if let Ok(map) = load_jurisdiction(code) {
             maps.insert(code.to_string(), map);
         }
     }
-    
+
     maps
 }
 
@@ -77,7 +80,10 @@ pub fn get_authorization_requirements(
             .unwrap_or_default()
     } else {
         // Fallback to global/default requirements
-        vec!["ownership_proof".to_string(), "local_legal_counsel".to_string()]
+        vec![
+            "ownership_proof".to_string(),
+            "local_legal_counsel".to_string(),
+        ]
     }
 }
 
@@ -97,7 +103,7 @@ mod tests {
         // Test loading a known jurisdiction
         let result = load_jurisdiction("us");
         assert!(result.is_ok());
-        
+
         if let Ok(map) = result {
             assert_eq!(map.code, "US");
             assert!(!map.notes.is_empty());

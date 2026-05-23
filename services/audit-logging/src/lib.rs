@@ -1,8 +1,8 @@
 // ForgeWorks Core - Audit Logging Service
 // COMPLIANCE-FIRST: Immutable logging, no modifications
 
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -28,7 +28,7 @@ pub enum AuditResult {
 
 /**
  * Create immutable audit log entry
- * 
+ *
  * All actions must be logged. No exceptions.
  */
 pub fn log_event(
@@ -41,7 +41,7 @@ pub fn log_event(
 ) -> AuditEntry {
     let timestamp = Utc::now();
     let id = uuid::Uuid::new_v4().to_string();
-    
+
     // Create hash chain for tamper detection
     let entry_data = format!(
         "{}|{}|{}|{}|{}|{}",
@@ -52,17 +52,17 @@ pub fn log_event(
         resource,
         serde_json::to_string(&result).unwrap()
     );
-    
+
     let hash_input = if let Some(prev_hash) = previous_hash {
         format!("{}|{}", prev_hash, entry_data)
     } else {
         entry_data
     };
-    
+
     let mut hasher = Sha256::new();
     hasher.update(hash_input.as_bytes());
     let current_hash = format!("{:x}", hasher.finalize());
-    
+
     AuditEntry {
         id,
         timestamp,
@@ -83,16 +83,44 @@ pub fn verify_audit_integrity(entries: &[AuditEntry]) -> bool {
     if entries.is_empty() {
         return true;
     }
-    
+
+    // Verify first entry's hash
+    if !entries.is_empty() {
+        let first_entry = &entries[0];
+        let entry_data = format!(
+            "{}|{}|{}|{}|{}|{}",
+            first_entry.id,
+            first_entry.timestamp.to_rfc3339(),
+            first_entry.actor,
+            first_entry.action,
+            first_entry.resource,
+            serde_json::to_string(&first_entry.result).unwrap()
+        );
+
+        let hash_input = if let Some(prev_hash) = &first_entry.previous_hash {
+            format!("{}|{}", prev_hash, entry_data)
+        } else {
+            entry_data
+        };
+
+        let mut hasher = Sha256::new();
+        hasher.update(hash_input.as_bytes());
+        let expected_hash = format!("{:x}", hasher.finalize());
+
+        if first_entry.current_hash != expected_hash {
+            return false;
+        }
+    }
+
     for i in 1..entries.len() {
         let prev_entry = &entries[i - 1];
         let curr_entry = &entries[i];
-        
+
         // Verify hash chain
         if curr_entry.previous_hash.as_ref() != Some(&prev_entry.current_hash) {
             return false;
         }
-        
+
         // Recompute hash to verify
         let entry_data = format!(
             "{}|{}|{}|{}|{}|{}",
@@ -103,17 +131,17 @@ pub fn verify_audit_integrity(entries: &[AuditEntry]) -> bool {
             curr_entry.resource,
             serde_json::to_string(&curr_entry.result).unwrap()
         );
-        
+
         let hash_input = format!("{}|{}", prev_entry.current_hash, entry_data);
         let mut hasher = Sha256::new();
         hasher.update(hash_input.as_bytes());
         let expected_hash = format!("{:x}", hasher.finalize());
-        
+
         if curr_entry.current_hash != expected_hash {
             return false;
         }
     }
-    
+
     true
 }
 
@@ -138,7 +166,7 @@ mod tests {
             None,
             serde_json::json!({"test": true}),
         );
-        
+
         assert_eq!(entry.actor, "user123");
         assert_eq!(entry.action, "analyze_device");
         assert!(!entry.current_hash.is_empty());
@@ -154,7 +182,7 @@ mod tests {
             None,
             serde_json::json!({}),
         );
-        
+
         let entry2 = log_event(
             "user123",
             "action2",
@@ -163,7 +191,7 @@ mod tests {
             Some(&entry1.current_hash),
             serde_json::json!({}),
         );
-        
+
         assert_eq!(entry2.previous_hash, Some(entry1.current_hash.clone()));
     }
 
@@ -177,7 +205,7 @@ mod tests {
             None,
             serde_json::json!({}),
         );
-        
+
         let entry2 = log_event(
             "user123",
             "action2",
@@ -186,7 +214,7 @@ mod tests {
             Some(&entry1.current_hash),
             serde_json::json!({}),
         );
-        
+
         let entries = vec![entry1, entry2];
         assert!(verify_audit_integrity(&entries));
     }
@@ -201,7 +229,7 @@ mod tests {
             None,
             serde_json::json!({}),
         );
-        
+
         let entry2 = log_event(
             "user123",
             "action2",
@@ -210,10 +238,10 @@ mod tests {
             Some(&entry1.current_hash),
             serde_json::json!({}),
         );
-        
+
         // Tamper with entry1
         entry1.action = "tampered_action".to_string();
-        
+
         let entries = vec![entry1, entry2];
         assert!(!verify_audit_integrity(&entries));
     }

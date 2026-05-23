@@ -1,12 +1,15 @@
 // ForgeWorks Core - Legal Classification Service
 // COMPLIANCE-FIRST: Classification and routing only, no execution
 
-use serde::{Deserialize, Serialize};
 use device_analysis::DeviceProfile;
 use ownership_verification::VerificationResult;
+use serde::{Deserialize, Serialize};
 
 pub mod loader;
-pub use loader::{load_jurisdiction, load_all_jurisdictions, get_default_status, get_authorization_requirements, JurisdictionMap, LoaderError};
+pub use loader::{
+    get_authorization_requirements, get_default_status, load_all_jurisdictions, load_jurisdiction,
+    JurisdictionMap, LoaderError,
+};
 
 // Re-export RiskLevel for use in other services
 pub use device_analysis::RiskLevel;
@@ -67,7 +70,7 @@ pub enum RouteTarget {
 
 /**
  * Classify legal status based on device scenario
- * 
+ *
  * This function classifies legal status for routing purposes.
  * It does NOT provide legal advice or execution instructions.
  */
@@ -78,7 +81,7 @@ pub fn classify_legal_status(
 ) -> LegalClassification {
     let (status, auth_required, risk) = determine_legal_status(device, ownership, &jurisdiction);
     let routing = generate_routing_instructions(&status, &jurisdiction, &auth_required);
-    
+
     LegalClassification {
         status: status.clone(),
         jurisdiction, // Copy trait allows reuse
@@ -99,26 +102,22 @@ fn determine_legal_status(
     _jurisdiction: &Jurisdiction,
 ) -> (LegalStatus, Vec<AuthorizationType>, RiskLevel) {
     match device.classification {
-        device_analysis::DeviceClassification::ServiceModified => {
-            (
-                LegalStatus::Prohibited,
-                vec![
-                    AuthorizationType::CourtOrder,
-                    AuthorizationType::ServiceCenterAuthorization,
-                ],
-                RiskLevel::VeryHigh,
-            )
-        }
-        device_analysis::DeviceClassification::HardwareModified => {
-            (
-                LegalStatus::RequiresAuthorization,
-                vec![
-                    AuthorizationType::OEMAuthorization,
-                    AuthorizationType::OwnershipProof,
-                ],
-                RiskLevel::High,
-            )
-        }
+        device_analysis::DeviceClassification::ServiceModified => (
+            LegalStatus::Prohibited,
+            vec![
+                AuthorizationType::CourtOrder,
+                AuthorizationType::ServiceCenterAuthorization,
+            ],
+            RiskLevel::VeryHigh,
+        ),
+        device_analysis::DeviceClassification::HardwareModified => (
+            LegalStatus::RequiresAuthorization,
+            vec![
+                AuthorizationType::OEMAuthorization,
+                AuthorizationType::OwnershipProof,
+            ],
+            RiskLevel::High,
+        ),
         device_analysis::DeviceClassification::SoftwareModified => {
             if ownership.verified {
                 (
@@ -134,13 +133,7 @@ fn determine_legal_status(
                 )
             }
         }
-        _ => {
-            (
-                LegalStatus::Permitted,
-                vec![],
-                RiskLevel::Low,
-            )
-        }
+        _ => (LegalStatus::Permitted, vec![], RiskLevel::Low),
     }
 }
 
@@ -160,10 +153,11 @@ fn generate_routing_instructions(
             } else {
                 RouteTarget::LegalCounsel
             };
-            
+
             RoutingInstructions {
                 route_to: route_target,
-                contact_information: "Contact legal counsel for jurisdiction-specific guidance".to_string(),
+                contact_information: "Contact legal counsel for jurisdiction-specific guidance"
+                    .to_string(),
                 required_documentation: vec![
                     "Ownership proof".to_string(),
                     "Authorization documents".to_string(),
@@ -171,14 +165,12 @@ fn generate_routing_instructions(
                 compliance_notes: "External authority routing required".to_string(),
             }
         }
-        _ => {
-            RoutingInstructions {
-                route_to: RouteTarget::OEM,
-                contact_information: "Contact OEM service program".to_string(),
-                required_documentation: vec!["Ownership proof".to_string()],
-                compliance_notes: "Standard routing".to_string(),
-            }
-        }
+        _ => RoutingInstructions {
+            route_to: RouteTarget::OEM,
+            contact_information: "Contact OEM service program".to_string(),
+            required_documentation: vec!["Ownership proof".to_string()],
+            compliance_notes: "Standard routing".to_string(),
+        },
     }
 }
 
@@ -196,7 +188,7 @@ mod tests {
             blocked: false,
             verification_timestamp: chrono::Utc::now(),
         };
-        
+
         let result = classify_legal_status(&device, &ownership, Jurisdiction::US);
         assert_eq!(result.status, LegalStatus::Prohibited);
         assert_eq!(result.risk_level, RiskLevel::VeryHigh);
@@ -212,7 +204,7 @@ mod tests {
             blocked: false,
             verification_timestamp: chrono::Utc::now(),
         };
-        
+
         let result = classify_legal_status(&device, &ownership, Jurisdiction::US);
         assert_eq!(result.status, LegalStatus::Permitted);
         assert_eq!(result.risk_level, RiskLevel::Low);
