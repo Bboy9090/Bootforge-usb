@@ -1,12 +1,12 @@
 // ForgeWorks Core - End-to-End Flow
 // COMPLIANCE-FIRST: Device → Ownership → Legal → Audit → Routing
 
-use serde::{Deserialize, Serialize};
-use device_analysis::{analyze, DeviceProfile};
-use ownership_verification::{verify_ownership, OwnershipAttestation, VerificationResult};
-use legal_classification::{classify_legal_status, Jurisdiction, LegalClassification};
 use audit_logging::{log_event, AuditEntry, AuditResult};
 use authority_routing::{generate_routing_result, RoutingResult};
+use device_analysis::{analyze, DeviceProfile};
+use legal_classification::{classify_legal_status, Jurisdiction, LegalClassification};
+use ownership_verification::{verify_ownership, OwnershipAttestation, VerificationResult};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceReport {
@@ -21,7 +21,7 @@ pub struct ComplianceReport {
 
 /**
  * End-to-end flow: Device → Ownership → Legal → Audit → Routing
- * 
+ *
  * This is the main orchestration function that connects all services.
  * It performs analysis and routing only - no execution.
  */
@@ -45,7 +45,7 @@ pub fn process_device_flow(
             "classification": format!("{:?}", device.classification),
         }),
     );
-    
+
     // Step 2: Ownership Verification
     let ownership = verify_ownership(&ownership_attestation, &device);
     let audit2 = log_event(
@@ -63,7 +63,7 @@ pub fn process_device_flow(
             "confidence": ownership.confidence,
         }),
     );
-    
+
     // Step 3: Legal Classification
     let legal = classify_legal_status(&device, &ownership, jurisdiction);
     let audit3 = log_event(
@@ -80,7 +80,7 @@ pub fn process_device_flow(
             "risk_level": format!("{:?}", legal.risk_level),
         }),
     );
-    
+
     // Step 4: Authority Routing
     let routing = generate_routing_result(&legal, ownership.verified);
     let audit4 = log_event(
@@ -94,11 +94,11 @@ pub fn process_device_flow(
             "reason": routing.routing_reason,
         }),
     );
-    
+
     // Step 5: Verify audit integrity
     let audit_entries = vec![audit1, audit2, audit3, audit4];
     let integrity_verified = audit_logging::verify_audit_integrity(&audit_entries);
-    
+
     ComplianceReport {
         device,
         ownership,
@@ -131,7 +131,7 @@ mod tests {
             documentation_references: vec!["doc1".to_string(), "doc2".to_string()],
             timestamp: Utc::now(),
         };
-        
+
         let report = process_device_flow(
             "iPhone 13 Pro - Clean device",
             attestation,
@@ -139,7 +139,7 @@ mod tests {
             "user123",
             None,
         );
-        
+
         assert!(report.audit_integrity_verified);
         assert_eq!(report.audit_entries.len(), 4);
         assert_eq!(report.device.non_invasive, true);
@@ -154,7 +154,7 @@ mod tests {
             documentation_references: vec!["doc1".to_string()],
             timestamp: Utc::now(),
         };
-        
+
         let report = process_device_flow(
             "Clean device",
             attestation,
@@ -162,7 +162,7 @@ mod tests {
             "user123",
             None,
         );
-        
+
         let json = export_compliance_report(&report);
         assert!(json.contains("device"));
         assert!(json.contains("ownership"));
@@ -180,7 +180,7 @@ mod tests {
             documentation_references: vec!["doc1".to_string()],
             timestamp: Utc::now(),
         };
-        
+
         let report = process_device_flow(
             "Clean device",
             attestation,
@@ -188,12 +188,12 @@ mod tests {
             "user123",
             None,
         );
-        
+
         // Verify hash chain
         for i in 1..report.audit_entries.len() {
             let prev = &report.audit_entries[i - 1];
             let curr = &report.audit_entries[i];
-            
+
             assert_eq!(
                 curr.previous_hash,
                 Some(prev.current_hash.clone()),
@@ -201,7 +201,7 @@ mod tests {
                 i
             );
         }
-        
+
         assert!(report.audit_integrity_verified);
     }
 }
