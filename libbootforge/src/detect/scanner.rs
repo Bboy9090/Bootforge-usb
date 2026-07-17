@@ -139,10 +139,7 @@ fn read_string_descriptor<T: UsbContext>(
         return None;
     }
 
-    match handle.read_string_descriptor_ascii(index) {
-        Ok(s) => Some(s),
-        Err(_) => None,
-    }
+    handle.read_string_descriptor_ascii(index).ok()
 }
 
 #[cfg(test)]
