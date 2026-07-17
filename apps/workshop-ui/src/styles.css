@@ -1,0 +1,72 @@
+:root { font-family: Inter, "Segoe UI", system-ui, sans-serif; color: #f7f3ff; background: #08070d; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 980px; min-height: 100vh; background: #08070d; }
+button { font: inherit; }
+.app-shell { min-height: 100vh; display: grid; grid-template-columns: 248px 1fr; background: radial-gradient(circle at 62% 0%, #302047 0, transparent 32%), #0c0a12; }
+.sidebar { position: relative; padding: 30px 22px 22px; border-right: 1px solid #30283c; background: linear-gradient(180deg, #15101d, #09080e); display: flex; flex-direction: column; }
+.brand-mark { width: 48px; height: 48px; display: grid; place-items: center; float: left; border-radius: 14px; font: 700 26px "Segoe UI", sans-serif; color: #100c16; background: linear-gradient(145deg,#ffca68,#f47c48 55%,#a84cde); box-shadow: 0 0 30px #f47c4840; }
+.brand-copy { margin: -44px 0 42px 62px; display: flex; flex-direction: column; gap: 3px; }
+.brand-copy span { font: 600 17px "Segoe UI", sans-serif; letter-spacing: .02em; }
+.brand-copy small { color: #9c91aa; font-size: 10px; }
+nav { display: grid; gap: 8px; }
+.nav-item { width: 100%; padding: 13px 14px; border: 1px solid transparent; border-radius: 10px; color: #81778d; background: transparent; text-align: left; }
+.nav-item span { display: inline-block; width: 24px; color: #c884ff; }
+.nav-item.active { color: white; border-color: #42354f; background: linear-gradient(90deg,#2b2035,#211927); }
+.nav-item:disabled { opacity: .55; }
+.safety-card { margin-top: auto; padding: 16px; border: 1px solid #3c3147; border-radius: 12px; background: #17121e; }
+.safety-card strong { color: #f4bc65; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.safety-card p { color: #9f94aa; font-size: 11px; line-height: 1.55; margin: 9px 0 0; }
+.sidebar footer { margin-top: 20px; color: #6d6477; font-size: 9px; text-align: center; letter-spacing: .14em; text-transform: uppercase; }
+.workspace { padding: 38px 44px 54px; max-width: 1500px; width: 100%; margin: 0 auto; }
+.topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+.eyebrow, .status-label { margin: 0 0 8px; color: #b782e0; font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+h1,h2,h3,h4,p { margin-top: 0; }
+h1 { max-width: 710px; margin-bottom: 0; font: 600 35px/1.15 "Segoe UI", sans-serif; letter-spacing: -.03em; }
+.runtime-pill { padding: 10px 13px; border: 1px solid #393041; border-radius: 999px; color: #b4aabb; background: #15111b; font-size: 11px; }
+.runtime-pill i { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #db9a4b; box-shadow: 0 0 8px currentColor; }
+.runtime-pill i.online { background: #6ce0a9; }
+.hero-panel { min-height: 190px; padding: 34px 38px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; position: relative; border: 1px solid #5a3b63; border-radius: 18px; background: linear-gradient(120deg,#2b1734,#3c1e42 45%,#1d1629); box-shadow: inset 0 1px #ffffff0d, 0 30px 80px #0000004d; }
+.hero-panel::after { content:""; position:absolute; width:360px; height:360px; right:-60px; top:-150px; border:1px solid #ffbd6630; border-radius:50%; box-shadow: 0 0 80px #dc6dff25; }
+.hero-panel h2 { margin-bottom: 10px; font: 600 28px "Segoe UI", sans-serif; }
+.hero-panel p { color: #c0b3c8; font-size: 13px; }
+.scan-button { z-index:1; min-width: 180px; padding: 15px 20px; border: 0; border-radius: 10px; color: #17101d; background: linear-gradient(110deg,#ffd77c,#ed8751); font-weight: 700; box-shadow: 0 10px 30px #f08d4540; cursor: pointer; }
+.scan-button:disabled { opacity: .7; cursor: progress; }
+.metric-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin: 18px 0; }
+.metric { padding: 19px 21px; border: 1px solid #31293a; border-radius: 13px; background: #15111c; }
+.metric span { color: #93879d; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
+.metric strong { display:block; margin: 8px 0 3px; font: 600 26px "Segoe UI", sans-serif; }
+.metric p { margin:0; color:#746b7d; font-size:10px; }
+.metric.accent { border-color:#7d543d; background:linear-gradient(135deg,#1c151d,#2b1a1a); }
+.metric.accent strong { color:#f7bc65; }
+.content-grid { display: grid; grid-template-columns: minmax(420px,.9fr) minmax(450px,1.1fr); gap: 18px; }
+.panel { min-height: 390px; border: 1px solid #31293a; border-radius: 15px; background: #131019; overflow: hidden; }
+.panel-heading { min-height: 76px; padding: 20px 23px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #2a2431; }
+.panel-heading .eyebrow { margin-bottom:5px; }
+.panel-heading h3 { margin:0; font:600 17px "Segoe UI", sans-serif; }
+.panel-heading > span { min-width:28px; height:28px; display:grid; place-items:center; border-radius:8px; background:#2a2031; color:#ca97ec; font-size:11px; }
+.empty-state { min-height:300px; display:grid; place-content:center; text-align:center; color:#756c7d; }
+.empty-state.compact { min-height:280px; }
+.empty-state h4 { margin:13px 0 7px; color:#beb4c5; }
+.empty-state p { max-width:290px; font-size:12px; line-height:1.5; }
+.port-icon { width:52px; height:52px; margin:auto; display:grid; place-items:center; border:1px solid #493755; border-radius:50%; color:#cd92f1; font-size:24px; }
+.device-rows { padding:10px; display:grid; gap:7px; }
+.device-row { padding:13px; display:grid; grid-template-columns:42px 1fr auto; align-items:center; gap:12px; border:1px solid transparent; border-radius:10px; color:white; background:transparent; text-align:left; cursor:pointer; }
+.device-row:hover,.device-row.selected { border-color:#594067; background:#211827; }
+.device-row span:nth-child(2) { display:flex; flex-direction:column; gap:4px; }
+.device-row small { color:#83798b; font-family:monospace; }
+.device-row b { padding:6px 8px; border-radius:6px; color:#e9b566; background:#342319; font-size:9px; text-transform:uppercase; }
+.device-orb { width:38px; height:38px; display:grid; place-items:center; border-radius:10px; color:#16101b; background:linear-gradient(145deg,#f6ca6b,#b968e0); font:700 15px "Segoe UI", sans-serif; }
+.device-orb.large { width:52px; height:52px; border-radius:14px; font-size:20px; }
+.detail-body { padding:22px; }
+.device-title { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+.device-title h4 { margin:0 0 4px; font:600 19px "Segoe UI", sans-serif; }
+.device-title p { margin:0; color:#81768a; font-size:11px; }
+dl { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:0 0 18px; overflow:hidden; border:1px solid #2c2533; border-radius:10px; background:#2c2533; }
+dl div { padding:13px 15px; background:#17131d; }
+dt { color:#756b7e; font-size:9px; text-transform:uppercase; letter-spacing:.1em; }
+dd { margin:6px 0 0; color:#d9d1df; font-size:12px; }
+.recommendation { padding:16px; border:1px solid #594135; border-radius:10px; background:linear-gradient(110deg,#21171b,#261a22); }
+.recommendation span { display:block; color:#d39555; font-size:9px; font-weight:700; letter-spacing:.15em; }
+.recommendation strong { display:block; margin:7px 0; color:#f4cc83; font-size:13px; }
+.recommendation p { margin:0; color:#93868f; font-size:10px; line-height:1.45; }
+@media (max-width: 1100px) { .workspace{padding:30px 28px}.content-grid{grid-template-columns:1fr}.app-shell{grid-template-columns:220px 1fr} }

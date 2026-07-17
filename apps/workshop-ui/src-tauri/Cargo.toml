@@ -1,0 +1,17 @@
+[package]
+name = "phoenix-key"
+version = "3.0.0"
+edition = "2021"
+description = "Phoenix Key desktop device discovery interface powered by BootForge"
+license = "MIT OR Apache-2.0"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+libbootforge = { path = "../../../libbootforge" }
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.5", features = [] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

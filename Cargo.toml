@@ -13,6 +13,8 @@ members = [
     "apps/forgeworks-core/src-tauri",
 ]
 
+exclude = ["apps/workshop-ui/src-tauri"]
+
 [workspace.package]
 version = "3.0.0"
 edition = "2021"
