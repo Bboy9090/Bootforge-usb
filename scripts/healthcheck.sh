@@ -77,44 +77,47 @@ fi
 # Test 4: Project builds successfully
 echo ""
 echo "4. Testing project build..."
-if cargo build --quiet 2>&1 | grep -q "error"; then
-    fail "Project build failed"
-else
+if cargo build --quiet; then
     pass "Project builds successfully"
+else
+    fail "Project build failed"
 fi
 
 # Test 5: Core library (libbootforge) builds
 echo ""
 echo "5. Testing libbootforge library..."
-if cargo build -p libbootforge --quiet 2>&1 | grep -q "error"; then
-    fail "libbootforge build failed"
-else
+if cargo build -p libbootforge --quiet; then
     pass "libbootforge builds successfully"
+else
+    fail "libbootforge build failed"
 fi
 
 # Test 6: CLI binary builds
 echo ""
 echo "6. Testing bootforge-cli binary..."
-if cargo build --bin bootforge-cli --quiet 2>&1 | grep -q "error"; then
-    fail "bootforge-cli build failed"
-else
+if cargo build --bin bootforge-cli --quiet; then
     pass "bootforge-cli builds successfully"
+else
+    fail "bootforge-cli build failed"
 fi
 
 # Test 7: Unit tests pass
 echo ""
 echo "7. Running unit tests..."
-if cargo test --lib -p libbootforge --quiet 2>&1 | grep -q "test result: FAILED"; then
-    fail "libbootforge unit tests failed"
-else
+if cargo test --lib -p libbootforge --quiet; then
     pass "libbootforge unit tests pass"
+else
+    fail "libbootforge unit tests failed"
 fi
 
 # Test 8: USB detection capability
 echo ""
 echo "8. Testing USB device detection..."
-if cargo run --bin bootforge-cli --quiet 2>&1 | grep -qE "(Device|USB|VID|PID|No devices)" || \
-   cargo run --bin bootforge-cli --quiet 2>/dev/null >/dev/null; then
+CLI_OUTPUT=$(cargo run --bin bootforge-cli --quiet 2>&1)
+CLI_STATUS=$?
+if [ $CLI_STATUS -ne 0 ]; then
+    fail "USB detection command failed"
+elif echo "$CLI_OUTPUT" | grep -qE "(Device|USB|VID|PID|No devices)"; then
     pass "USB detection capability confirmed"
 else
     warn "USB detection test inconclusive (may require connected devices)"
@@ -123,7 +126,9 @@ fi
 # Test 9: No write operations in binary
 echo ""
 echo "9. Verifying read-only safety..."
-if strings target/debug/bootforge-cli 2>/dev/null | grep -qiE "(write_bulk|write_control|format|erase|flash)"; then
+if [ ! -f target/debug/bootforge-cli ]; then
+    fail "bootforge-cli binary unavailable for read-only inspection"
+elif strings target/debug/bootforge-cli 2>/dev/null | grep -qiE "(write_bulk|write_control|format|erase|flash)"; then
     warn "Potential write operations found in binary (manual review needed)"
 else
     pass "No obvious write operations detected in binary"
@@ -132,7 +137,7 @@ fi
 # Test 10: Audit logging service
 echo ""
 echo "10. Testing audit logging service..."
-if cargo test -p audit-logging --lib --quiet 2>&1 | grep -qE "test result: (ok|FAILED)"; then
+if cargo test -p audit-logging --lib --quiet; then
     pass "Audit logging service tests completed"
 else
     fail "Audit logging service tests failed"
