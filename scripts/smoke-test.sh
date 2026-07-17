@@ -35,39 +35,43 @@ fail() {
     ((TESTS_FAILED++))
 }
 
+warn() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
 # Test 1: Workspace builds
 echo "1. Building workspace (debug)..."
-if cargo build 2>&1 | grep -q "error:"; then
-    fail "Workspace build failed"
-else
+if cargo build; then
     pass "Workspace builds successfully"
+else
+    fail "Workspace build failed"
 fi
 
 # Test 2: Release build
 echo ""
 echo "2. Building workspace (release)..."
-if cargo build --release 2>&1 | grep -q "error:"; then
-    fail "Release build failed"
-else
+if cargo build --release; then
     pass "Release build successful"
+else
+    fail "Release build failed"
 fi
 
 # Test 3: libbootforge library
 echo ""
 echo "3. Testing libbootforge library..."
-if cargo build -p libbootforge --lib 2>&1 | grep -q "error:"; then
-    fail "libbootforge library build failed"
-else
+if cargo build -p libbootforge --lib; then
     pass "libbootforge library builds"
+else
+    fail "libbootforge library build failed"
 fi
 
 # Test 4: bootforge-cli binary
 echo ""
 echo "4. Testing bootforge-cli binary..."
-if cargo build --bin bootforge-cli 2>&1 | grep -q "error:"; then
-    fail "bootforge-cli binary build failed"
-else
+if cargo build --bin bootforge-cli; then
     pass "bootforge-cli binary builds"
+else
+    fail "bootforge-cli binary build failed"
 fi
 
 # Test 5: Examples compile
@@ -81,10 +85,10 @@ for example in libbootforge/examples/*.rs; do
         EXAMPLE_NAME=$(basename "$example" .rs)
         ((EXAMPLES_TOTAL++))
 
-        if cargo build --example "$EXAMPLE_NAME" 2>&1 | grep -q "error:"; then
-            fail "Example '$EXAMPLE_NAME' failed to build"
-        else
+        if cargo build --example "$EXAMPLE_NAME"; then
             ((EXAMPLES_PASSED++))
+        else
+            fail "Example '$EXAMPLE_NAME' failed to build"
         fi
     fi
 done
@@ -100,10 +104,10 @@ fi
 # Test 6: Unit tests
 echo ""
 echo "6. Running unit tests..."
-if cargo test --lib --workspace --quiet 2>&1 | grep -q "test result: FAILED"; then
-    fail "Unit tests failed"
-else
+if cargo test --lib --workspace --quiet; then
     pass "Unit tests pass"
+else
+    fail "Unit tests failed"
 fi
 
 # Test 7: Services build
@@ -113,10 +117,10 @@ SERVICES=("device-analysis" "ownership-verification" "legal-classification" "aud
 SERVICES_PASSED=0
 
 for service in "${SERVICES[@]}"; do
-    if cargo build -p "$service" --quiet 2>&1 | grep -q "error:"; then
-        fail "Service '$service' build failed"
-    else
+    if cargo build -p "$service" --quiet; then
         ((SERVICES_PASSED++))
+    else
+        fail "Service '$service' build failed"
     fi
 done
 
@@ -130,7 +134,8 @@ fi
 echo ""
 echo "8. Testing CLI entrypoint..."
 CLI_OUTPUT=$(cargo run --bin bootforge-cli -- --help 2>&1)
-if echo "$CLI_OUTPUT" | grep -qiE "(bootforge|usage|options|--help)"; then
+CLI_STATUS=$?
+if [ $CLI_STATUS -eq 0 ] && echo "$CLI_OUTPUT" | grep -qiE "(bootforge|usage|options|--help)"; then
     pass "CLI entrypoint works (--help flag)"
 else
     fail "CLI entrypoint failed"
@@ -139,19 +144,19 @@ fi
 # Test 9: Code formatting
 echo ""
 echo "9. Checking code formatting..."
-if cargo fmt --check 2>&1 | grep -q "Diff"; then
-    fail "Code formatting check failed (run: cargo fmt)"
-else
+if cargo fmt --check; then
     pass "Code is properly formatted"
+else
+    fail "Code formatting check failed (run: cargo fmt)"
 fi
 
 # Test 10: Clippy lints (warnings allowed for smoke test)
 echo ""
 echo "10. Running clippy lints..."
-if cargo clippy --workspace --quiet 2>&1 | grep -q "error:"; then
-    fail "Clippy found errors"
+if cargo clippy --workspace --all-targets --all-features -- -D warnings; then
+    pass "Clippy checks pass with warnings denied"
 else
-    pass "Clippy checks pass (warnings may exist)"
+    fail "Clippy found errors"
 fi
 
 # Summary
