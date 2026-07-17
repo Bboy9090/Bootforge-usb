@@ -71,6 +71,31 @@ cargo run --bin bootforge-cli
 ./target/release/bootforge-cli
 ```
 
+### Phoenix Key Interface
+
+Phoenix Key is the desktop product layer powered by `libbootforge`. The browser preview uses a clearly labeled sample device; the Tauri desktop build calls the real read-only USB scanner.
+
+```bash
+cd apps/workshop-ui
+
+# Install locked frontend dependencies
+npm ci
+
+# Run the browser preview
+npm run dev
+
+# Verify the production frontend
+npm run build
+
+# Run the native desktop shell (requires the Tauri v1 prerequisites)
+npm run desktop:dev
+
+# Produce platform installers
+npm run desktop:build
+```
+
+Windows MSI and NSIS packages are also built by `.github/workflows/windows-desktop.yml` and uploaded as the `phoenix-key-windows-installers` workflow artifact.
+
 ## Core Components
 
 ### libbootforge

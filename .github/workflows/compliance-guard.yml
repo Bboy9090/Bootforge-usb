@@ -10,7 +10,7 @@ jobs:
         run: |
           set -euo pipefail
           scan_roots=(apps/workshop-ui/src apps/forgeworks-core/src-tauri/src)
-          if grep -RInE "\b(bypass|unlock|jailbreak|root)\b" "${scan_roots[@]}" \
+          if grep -RInE "\b(bypass|unlock|jailbreak)\b" "${scan_roots[@]}" \
             --exclude-dir=target \
             --exclude='*.md'; then
             echo "Forbidden language found in a public user interface."

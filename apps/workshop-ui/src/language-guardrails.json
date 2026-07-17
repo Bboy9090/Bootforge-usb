@@ -1,0 +1,6 @@
+{
+  "productName": "Phoenix Key",
+  "tagline": "Reignite · Rebuild · Reboot",
+  "principles": ["read-only discovery", "ownership-first routing", "clear confidence labels"],
+  "publicCopyRule": "Describe observable device state and approved next routes without promising unsupported modification capabilities."
+}
