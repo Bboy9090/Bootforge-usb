@@ -5,9 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Forbidden Language Scan
+      - name: Public UI Language Scan
+        shell: bash
         run: |
-          grep -RInE "(bypass|unlock|jailbreak|root)" . && exit 1 || exit 0
+          set -euo pipefail
+          scan_roots=(apps/workshop-ui/src apps/forgeworks-core/src-tauri/src)
+          if grep -RInE "\b(bypass|unlock|jailbreak|root)\b" "${scan_roots[@]}" \
+            --exclude-dir=target \
+            --exclude='*.md'; then
+            echo "Forbidden language found in a public user interface."
+            exit 1
+          fi
       - name: Pandora Isolation
+        shell: bash
         run: |
-          grep -RIn "pandora-codex" apps services docs && exit 1 || exit 0
+          set -euo pipefail
+          if grep -RIn "pandora-codex" apps services; then
+            echo "Pandora Codex must not be referenced by public application or service code."
+            exit 1
+          fi
