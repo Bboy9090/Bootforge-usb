@@ -21,12 +21,11 @@ pub struct JurisdictionMap {
  * Load jurisdiction map from JSON file
  */
 pub fn load_jurisdiction(code: &str) -> Result<JurisdictionMap, String> {
-    let file_path = format!(
-        "services/legal-classification/jurisdiction-map/{}.json",
-        code.to_lowercase()
-    );
+    let file_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("jurisdiction-map")
+        .join(format!("{}.json", code.to_lowercase()));
 
-    if !Path::new(&file_path).exists() {
+    if !file_path.exists() {
         return Err(format!("Jurisdiction map not found: {}", code));
     }
 

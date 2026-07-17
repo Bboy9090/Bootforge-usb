@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn test_analyze_device() {
         let result = analyze("iPhone 13 Pro - Clean device");
-        assert_eq!(result.non_invasive, true);
+        assert!(result.non_invasive);
         assert_eq!(result.classification, DeviceClassification::Clean);
     }
 
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn test_always_non_invasive() {
         let result = analyze("Any device metadata");
-        assert_eq!(result.non_invasive, true);
+        assert!(result.non_invasive);
     }
 
     #[test]
@@ -236,7 +236,7 @@ mod tests {
         };
 
         let profile = analyze_usb_device(&device);
-        assert_eq!(profile.non_invasive, true);
+        assert!(profile.non_invasive);
         assert_eq!(profile.manufacturer, "Apple Inc.");
         assert_eq!(profile.classification, DeviceClassification::Clean);
     }

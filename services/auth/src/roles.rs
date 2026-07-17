@@ -5,6 +5,12 @@ pub struct RoleManager {
     roles: HashSet<String>,
 }
 
+impl Default for RoleManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RoleManager {
     pub fn new() -> Self {
         RoleManager {
