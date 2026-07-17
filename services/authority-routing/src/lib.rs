@@ -159,7 +159,6 @@ pub fn generate_routing_result(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use device_analysis::RiskLevel;
     use legal_classification::{AuthorizationType, Jurisdiction, LegalStatus};
 
     #[test]
