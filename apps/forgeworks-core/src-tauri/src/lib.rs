@@ -142,7 +142,7 @@ mod tests {
 
         assert!(report.audit_integrity_verified);
         assert_eq!(report.audit_entries.len(), 4);
-        assert_eq!(report.device.non_invasive, true);
+        assert!(report.device.non_invasive);
     }
 
     #[test]
