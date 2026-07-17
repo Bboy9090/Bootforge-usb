@@ -79,7 +79,7 @@ impl CliOptions {
                 "--mode" => {
                     i += 1;
                     if i < args.len() {
-                        if let Some(mode) = DeviceMode::from_str(&args[i]) {
+                        if let Some(mode) = DeviceMode::parse(&args[i]) {
                             options.mode_filter = Some(mode);
                         } else {
                             eprintln!("Error: Invalid mode '{}'. Valid modes: normal, recovery, dfu, bootloader, fastboot, adb, massstorage", args[i]);
