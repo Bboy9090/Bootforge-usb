@@ -36,7 +36,7 @@ pub enum DeviceMode {
 
 impl DeviceMode {
     /// Parse mode from string (for CLI)
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "normal" => Some(DeviceMode::Normal),
             "recovery" => Some(DeviceMode::Recovery),
