@@ -159,6 +159,7 @@ pub fn generate_routing_result(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use device_analysis::RiskLevel;
     use legal_classification::{AuthorizationType, Jurisdiction, LegalStatus};
 
     #[test]
@@ -170,7 +171,6 @@ mod tests {
 
     #[test]
     fn test_generate_routing_result() {
-        use device_analysis::RiskLevel;
         let classification = LegalClassification {
             status: LegalStatus::RequiresAuthorization,
             jurisdiction: Jurisdiction::US,

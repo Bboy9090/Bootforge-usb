@@ -77,6 +77,31 @@ pub fn log_event(
 }
 
 /**
+ * Recompute the expected hash for an entry given an optional previous hash.
+ */
+fn compute_entry_hash(entry: &AuditEntry, previous_hash: Option<&str>) -> String {
+    let entry_data = format!(
+        "{}|{}|{}|{}|{}|{}",
+        entry.id,
+        entry.timestamp.to_rfc3339(),
+        entry.actor,
+        entry.action,
+        entry.resource,
+        serde_json::to_string(&entry.result).unwrap()
+    );
+
+    let hash_input = if let Some(prev_hash) = previous_hash {
+        format!("{}|{}", prev_hash, entry_data)
+    } else {
+        entry_data
+    };
+
+    let mut hasher = Sha256::new();
+    hasher.update(hash_input.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+/**
  * Verify audit log integrity (hash chain verification)
  */
 pub fn verify_audit_integrity(entries: &[AuditEntry]) -> bool {
@@ -84,60 +109,23 @@ pub fn verify_audit_integrity(entries: &[AuditEntry]) -> bool {
         return true;
     }
 
-    // Verify first entry's hash
-    if !entries.is_empty() {
-        let first_entry = &entries[0];
-        let entry_data = format!(
-            "{}|{}|{}|{}|{}|{}",
-            first_entry.id,
-            first_entry.timestamp.to_rfc3339(),
-            first_entry.actor,
-            first_entry.action,
-            first_entry.resource,
-            serde_json::to_string(&first_entry.result).unwrap()
-        );
-
-        let hash_input = if let Some(prev_hash) = &first_entry.previous_hash {
-            format!("{}|{}", prev_hash, entry_data)
+    // Verify every entry's stored hash matches its recomputed hash.
+    // The first entry has no previous hash; subsequent entries chain from the prior entry.
+    for (i, entry) in entries.iter().enumerate() {
+        let previous_hash = if i == 0 {
+            None
         } else {
-            entry_data
+            Some(entries[i - 1].current_hash.as_str())
         };
 
-        let mut hasher = Sha256::new();
-        hasher.update(hash_input.as_bytes());
-        let expected_hash = format!("{:x}", hasher.finalize());
-
-        if first_entry.current_hash != expected_hash {
-            return false;
-        }
-    }
-
-    for i in 1..entries.len() {
-        let prev_entry = &entries[i - 1];
-        let curr_entry = &entries[i];
-
-        // Verify hash chain
-        if curr_entry.previous_hash.as_ref() != Some(&prev_entry.current_hash) {
+        // Verify hash chain link
+        if entry.previous_hash.as_deref() != previous_hash {
             return false;
         }
 
-        // Recompute hash to verify
-        let entry_data = format!(
-            "{}|{}|{}|{}|{}|{}",
-            curr_entry.id,
-            curr_entry.timestamp.to_rfc3339(),
-            curr_entry.actor,
-            curr_entry.action,
-            curr_entry.resource,
-            serde_json::to_string(&curr_entry.result).unwrap()
-        );
-
-        let hash_input = format!("{}|{}", prev_entry.current_hash, entry_data);
-        let mut hasher = Sha256::new();
-        hasher.update(hash_input.as_bytes());
-        let expected_hash = format!("{:x}", hasher.finalize());
-
-        if curr_entry.current_hash != expected_hash {
+        // Verify stored hash matches recomputed hash
+        let expected_hash = compute_entry_hash(entry, previous_hash);
+        if entry.current_hash != expected_hash {
             return false;
         }
     }
