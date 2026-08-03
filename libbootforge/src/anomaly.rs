@@ -41,8 +41,14 @@ pub fn analyze_passively(
             evidence: vec![format!("{} descriptor issue(s)", descriptors.issues.len())],
         });
     }
-    let has_hid = composite.interfaces.iter().any(|interface| interface.class == 3);
-    let has_vendor = composite.interfaces.iter().any(|interface| interface.class == 255);
+    let has_hid = composite
+        .interfaces
+        .iter()
+        .any(|interface| interface.class == 3);
+    let has_vendor = composite
+        .interfaces
+        .iter()
+        .any(|interface| interface.class == 255);
     if has_hid && has_vendor {
         findings.push(AnomalyFinding {
             kind: AnomalyKind::SuspiciousHidComposite,
@@ -52,7 +58,10 @@ pub fn analyze_passively(
         });
     }
     if !composite.interfaces.is_empty()
-        && composite.interfaces.iter().all(|interface| interface.class == 255)
+        && composite
+            .interfaces
+            .iter()
+            .all(|interface| interface.class == 255)
     {
         findings.push(AnomalyFinding {
             kind: AnomalyKind::VendorSpecificOnly,
@@ -61,7 +70,13 @@ pub fn analyze_passively(
             evidence: vec!["all observed interfaces are vendor-specific".into()],
         });
     }
-    if device.serial_number.as_deref().map(str::trim).unwrap_or("").is_empty() {
+    if device
+        .serial_number
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or("")
+        .is_empty()
+    {
         findings.push(AnomalyFinding {
             kind: AnomalyKind::MissingSerial,
             severity: AnomalySeverity::Info,
@@ -114,6 +129,8 @@ mod tests {
                 malformed_interface_descriptors: 0,
             },
         );
-        assert!(findings.iter().any(|finding| finding.kind == AnomalyKind::MissingSerial));
+        assert!(findings
+            .iter()
+            .any(|finding| finding.kind == AnomalyKind::MissingSerial));
     }
 }

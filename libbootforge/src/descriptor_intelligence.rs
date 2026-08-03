@@ -21,10 +21,22 @@ pub enum DescriptorKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DescriptorIssue {
-    InputTooLarge { length: usize, maximum: usize },
-    TruncatedHeader { offset: usize },
-    InvalidLength { offset: usize, length: u8 },
-    TruncatedBody { offset: usize, declared: usize, available: usize },
+    InputTooLarge {
+        length: usize,
+        maximum: usize,
+    },
+    TruncatedHeader {
+        offset: usize,
+    },
+    InvalidLength {
+        offset: usize,
+        length: u8,
+    },
+    TruncatedBody {
+        offset: usize,
+        declared: usize,
+        available: usize,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -132,6 +144,9 @@ mod tests {
     fn rejects_truncated_body_without_panicking() {
         let snapshot = DescriptorSnapshot::decode(&[5, 1, 0]);
         assert!(!snapshot.complete);
-        assert!(matches!(snapshot.issues[0], DescriptorIssue::TruncatedBody { .. }));
+        assert!(matches!(
+            snapshot.issues[0],
+            DescriptorIssue::TruncatedBody { .. }
+        ));
     }
 }
