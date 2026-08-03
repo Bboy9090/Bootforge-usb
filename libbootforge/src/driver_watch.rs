@@ -5,8 +5,12 @@
 //! for deciding whether a normalized `DriverChanged` event should be emitted.
 
 use crate::driver::DriverReport;
+use crate::forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
+use crate::identity::DeviceIdentity;
+use crate::{inspect_platform_driver, scan_devices, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::Duration;
 
 /// Fields that changed between two driver observations.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -94,6 +98,83 @@ impl DriverStateTracker {
             self.reports.entry(current_id.to_string()).or_insert(report);
         }
     }
+}
+
+/// Passive driver watcher that emits normalized `DriverChanged` forensic events.
+///
+/// It uses the host-native inspector selected by `inspect_platform_driver`. A future
+/// SetupAPI/CfgMgr32 notification backend may wake this watcher immediately; polling remains
+/// the portable and testable baseline.
+pub struct DriverChangeMonitor {
+    source: ObservationSource,
+    sequence: u64,
+    tracker: DriverStateTracker,
+}
+
+impl DriverChangeMonitor {
+    pub fn new() -> Result<Self> {
+        let mut monitor = Self {
+            source: native_source(),
+            sequence: 0,
+            tracker: DriverStateTracker::default(),
+        };
+        for device in scan_devices()? {
+            let id = DeviceIdentity::from_device(&device).stable_id;
+            monitor.tracker.seed(id, inspect_platform_driver(&device));
+        }
+        Ok(monitor)
+    }
+
+    pub fn poll(&mut self) -> Result<Vec<ForensicEvent>> {
+        let mut events = Vec::new();
+        for device in scan_devices()? {
+            let id = DeviceIdentity::from_device(&device).stable_id;
+            let report = inspect_platform_driver(&device);
+            if let Some(change) = self.tracker.observe(id, report.clone()) {
+                self.sequence = self.sequence.saturating_add(1);
+                let message = format!("driver report changed: {:?}", change.fields);
+                events.push(
+                    ForensicEvent::from_device(
+                        self.sequence,
+                        ForensicEventKind::DriverChanged,
+                        self.source.clone(),
+                        &device,
+                        Some(message),
+                    )
+                    .with_driver_report(report),
+                );
+            }
+        }
+        Ok(events)
+    }
+
+    pub fn wait_for_events(&mut self, timeout: Duration) -> Result<Vec<ForensicEvent>> {
+        let start = std::time::Instant::now();
+        loop {
+            let events = self.poll()?;
+            if !events.is_empty() || start.elapsed() >= timeout {
+                return Ok(events);
+            }
+            std::thread::sleep(Duration::from_millis(250));
+        }
+    }
+
+    pub fn sequence(&self) -> u64 {
+        self.sequence
+    }
+}
+
+fn native_source() -> ObservationSource {
+    #[cfg(windows)]
+    { return ObservationSource::WindowsSetupApi; }
+    #[cfg(target_os = "linux")]
+    { return ObservationSource::LinuxSysfs; }
+    #[cfg(target_os = "macos")]
+    { return ObservationSource::MacOsIoKit; }
+    #[cfg(feature = "arcwyre")]
+    { return ObservationSource::ArcwyreNative; }
+    #[allow(unreachable_code)]
+    ObservationSource::Unknown
 }
 
 #[cfg(test)]
