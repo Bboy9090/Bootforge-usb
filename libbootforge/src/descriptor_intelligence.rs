@@ -15,8 +15,7 @@ pub enum DescriptorKind {
     DeviceQualifier,
     InterfaceAssociation,
     Bos,
-    Hid,
-    DfuFunctional,
+    ClassSpecific(u8),
     Unknown(u8),
 }
 
@@ -107,8 +106,7 @@ fn kind(value: u8) -> DescriptorKind {
         6 => DescriptorKind::DeviceQualifier,
         11 => DescriptorKind::InterfaceAssociation,
         15 => DescriptorKind::Bos,
-        0x21 => DescriptorKind::Hid,
-        0x21 | 0x22 => DescriptorKind::DfuFunctional,
+        0x21..=0x25 => DescriptorKind::ClassSpecific(value),
         other => DescriptorKind::Unknown(other),
     }
 }
