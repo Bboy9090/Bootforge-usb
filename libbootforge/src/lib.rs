@@ -1,9 +1,10 @@
 //! # libbootforge
 //!
 //! Low-level, read-only-first forensic USB detection, identity correlation, protocol
-//! classification, health reporting, and event intelligence.
+//! classification, driver visibility, health reporting, and event intelligence.
 
 pub mod detect;
+pub mod driver;
 pub mod error;
 pub mod forensic;
 pub mod health;
@@ -19,6 +20,11 @@ pub mod enumeration;
 pub mod events;
 
 pub use detect::scanner::scan_devices;
+pub use driver::{
+    ArcwyreDriverInspector, DriverBackend, DriverConfidence, DriverEvidence, DriverInspector,
+    DriverReport, DriverState, LinuxDriverInspector, MacOsDriverInspector,
+    WindowsDriverInspector,
+};
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
@@ -57,6 +63,7 @@ mod tests {
         let _event: Option<ForensicEvent> = None;
         let _match: Option<ReconnectMatch> = None;
         let _protocol: Option<ProtocolReport> = None;
+        let _driver: Option<DriverReport> = None;
         let _health: Option<HealthReport> = None;
         let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
