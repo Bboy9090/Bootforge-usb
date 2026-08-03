@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Error, ErrorKind, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
 pub const RECORD_SCHEMA_VERSION: u16 = 1;
@@ -86,12 +86,9 @@ impl SessionRecorder {
         let path = path.as_ref().to_path_buf();
         let verification = verify_session(&path)?;
         if !verification.valid {
-            return Err(BootforgeError::IoError(Error::new(
-                ErrorKind::InvalidData,
-                format!(
-                    "refusing to resume invalid evidence chain at record {:?}",
-                    verification.first_invalid_record
-                ),
+            return Err(BootforgeError::EvidenceChainInvalid(format!(
+                "refusing to resume invalid evidence chain at record {:?}",
+                verification.first_invalid_record
             )));
         }
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
@@ -179,4 +176,93 @@ fn sha256_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(bytes);
     format!("{:x}", hasher.finalize())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
+        FingerprintConfidence, ForensicEventKind, ObservationSource, WorkflowRecommendation,
+    };
+    use std::fs;
+
+    fn event(sequence: u64) -> ForensicEvent {
+        let device = DeviceInfo {
+            bus_number: 1,
+            address: 2,
+            vendor_id: 0x18d1,
+            product_id: 0x4ee1,
+            vendor_name: Some("Google".into()),
+            manufacturer: Some("Google".into()),
+            product_name: Some("Android ADB".into()),
+            serial_number: Some("RECORDER-TEST".into()),
+            platform: DevicePlatform::Android,
+            transport: DeviceTransport::Usb2,
+            mode: DeviceMode::Adb,
+            fingerprint: DeviceFingerprint {
+                family: DeviceFamily::AndroidPhone,
+                model_hint: None,
+                confidence: FingerprintConfidence::High,
+            },
+            recommended_workflow: WorkflowRecommendation::AndroidAdbWorkflow,
+            matched_profile: Some("android-adb".into()),
+        };
+        ForensicEvent::from_device(
+            sequence,
+            ForensicEventKind::DeviceObserved,
+            ObservationSource::Libusb,
+            &device,
+            None,
+        )
+    }
+
+    fn temp_path(name: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "bootforge-{name}-{}-{}.jsonl",
+            std::process::id(),
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ))
+    }
+
+    #[test]
+    fn valid_chain_verifies_and_resumes() {
+        let path = temp_path("valid-chain");
+        {
+            let mut recorder = SessionRecorder::create(&path).expect("create recorder");
+            recorder.append(event(1)).expect("append first event");
+            recorder.append(event(2)).expect("append second event");
+        }
+
+        let report = verify_session(&path).expect("verify chain");
+        assert!(report.valid);
+        assert_eq!(report.records, 2);
+
+        let recorder = SessionRecorder::resume(&path).expect("resume valid chain");
+        assert_eq!(recorder.records_written(), 2);
+        assert_eq!(recorder.last_hash(), report.last_hash.as_deref());
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn tampered_record_is_rejected() {
+        let path = temp_path("tampered-chain");
+        {
+            let mut recorder = SessionRecorder::create(&path).expect("create recorder");
+            recorder.append(event(1)).expect("append event");
+        }
+
+        let contents = fs::read_to_string(&path).expect("read evidence");
+        fs::write(&path, contents.replace("DeviceObserved", "DeviceConnected"))
+            .expect("tamper evidence");
+
+        let report = verify_session(&path).expect("verify tampered chain");
+        assert!(!report.valid);
+        assert_eq!(report.first_invalid_record, Some(1));
+        assert!(matches!(
+            SessionRecorder::resume(&path),
+            Err(BootforgeError::EvidenceChainInvalid(_))
+        ));
+        let _ = fs::remove_file(path);
+    }
 }
