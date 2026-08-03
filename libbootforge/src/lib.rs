@@ -10,6 +10,7 @@ pub mod detect;
 pub mod driver;
 pub mod driver_watch;
 pub mod error;
+pub mod export;
 pub mod fingerprint;
 pub mod forensic;
 pub mod health;
@@ -43,6 +44,9 @@ pub use driver::{
 pub use driver_watch::{DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker};
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
+pub use export::{
+    export_inventory_csv, export_inventory_json, ExportManifest, EXPORT_SCHEMA_VERSION,
+};
 pub use fingerprint::{
     ForensicFingerprint, ForensicFingerprintConfidence, ForensicFingerprintEvidence,
     FORENSIC_FINGERPRINT_SCHEMA_VERSION,
@@ -114,6 +118,7 @@ mod tests {
         let _metrics: Option<PerformanceMetrics> = None;
         let _inventory: Option<EventInventory> = None;
         let _inventory_snapshot: Option<InventorySnapshot> = None;
+        let _manifest: Option<ExportManifest> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }
