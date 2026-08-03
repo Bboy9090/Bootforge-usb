@@ -11,6 +11,7 @@ pub mod forensic;
 pub mod health;
 pub mod identity;
 pub mod native_driver;
+pub mod notification;
 pub mod protocol;
 pub mod session;
 pub mod types;
@@ -38,6 +39,9 @@ pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
 pub use native_driver::inspect_platform_driver;
+pub use notification::{
+    NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult,
+};
 pub use protocol::{
     ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
 };
@@ -73,6 +77,8 @@ mod tests {
         let _driver_change: Option<DriverChange> = None;
         let _driver_tracker: Option<DriverStateTracker> = None;
         let _driver_monitor: Option<DriverChangeMonitor> = None;
+        let _wake_signal: Option<NotificationSignal> = None;
+        let _wake_result: Option<WakeResult> = None;
         let _health: Option<HealthReport> = None;
         let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
