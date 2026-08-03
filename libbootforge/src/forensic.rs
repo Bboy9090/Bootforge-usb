@@ -1,6 +1,8 @@
 //! Evidence-grade, normalized USB event records.
 
+use crate::health::HealthReport;
 use crate::identity::{DeviceIdentity, IdentityConfidence, IdentityEvidence};
+use crate::protocol::ProtocolReport;
 use crate::types::{DeviceInfo, DeviceMode, DevicePlatform};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -52,11 +54,13 @@ pub struct ForensicEvent {
     pub mode: DeviceMode,
     pub bus_number: u8,
     pub address: u8,
+    pub protocol_report: ProtocolReport,
+    pub health_report: HealthReport,
     pub message: Option<String>,
 }
 
 impl ForensicEvent {
-    /// Construct a deterministic normalized record from a device observation.
+    /// Construct a normalized record from a passive device observation.
     pub fn from_device(
         sequence: u64,
         kind: ForensicEventKind,
@@ -80,8 +84,16 @@ impl ForensicEvent {
             mode: device.mode,
             bus_number: device.bus_number,
             address: device.address,
+            protocol_report: ProtocolReport::from_device(device),
+            health_report: HealthReport::unknown(),
             message,
         }
+    }
+
+    /// Replace the unknown/default health state with watcher-derived evidence.
+    pub fn with_health_report(mut self, report: HealthReport) -> Self {
+        self.health_report = report;
+        self
     }
 
     /// Serialize one complete record suitable for append-only JSONL evidence streams.
@@ -94,6 +106,7 @@ impl ForensicEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::protocol::UsbProtocol;
     use crate::types::{
         DeviceFamily, DeviceFingerprint, DeviceTransport, FingerprintConfidence,
         WorkflowRecommendation,
@@ -104,10 +117,10 @@ mod tests {
             bus_number: 1,
             address: 4,
             vendor_id: 0x18d1,
-            product_id: 0x4ee7,
+            product_id: 0x4ee1,
             vendor_name: Some("Google".into()),
             manufacturer: Some("Google".into()),
-            product_name: Some("Android".into()),
+            product_name: Some("Android ADB".into()),
             serial_number: Some("SERIAL1".into()),
             platform: DevicePlatform::Android,
             transport: DeviceTransport::Usb3,
@@ -123,7 +136,7 @@ mod tests {
     }
 
     #[test]
-    fn event_contains_schema_sequence_and_stable_identity() {
+    fn event_contains_identity_and_protocol_intelligence() {
         let event = ForensicEvent::from_device(
             7,
             ForensicEventKind::DeviceConnected,
@@ -135,10 +148,17 @@ mod tests {
         assert_eq!(event.sequence, 7);
         assert!(event.device_id.starts_with("bfusb-"));
         assert_eq!(event.identity_confidence, IdentityConfidence::Exact);
+        assert!(event
+            .protocol_report
+            .observations
+            .iter()
+            .any(|item| item.protocol == UsbProtocol::Adb));
+        assert!(!event.protocol_report.active_probe_performed);
+        assert_eq!(event.health_report.score, None);
     }
 
     #[test]
-    fn json_line_is_single_record() {
+    fn json_line_is_single_complete_record() {
         let event = ForensicEvent::from_device(
             1,
             ForensicEventKind::DeviceObserved,
@@ -149,5 +169,7 @@ mod tests {
         let line = event.to_json_line().expect("serialization must succeed");
         assert!(!line.contains('\n'));
         assert!(line.contains("DeviceObserved"));
+        assert!(line.contains("protocol_report"));
+        assert!(line.contains("health_report"));
     }
 }
