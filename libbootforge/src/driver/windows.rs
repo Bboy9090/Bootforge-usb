@@ -8,7 +8,6 @@ use super::{
     WindowsDriverInspector,
 };
 use crate::types::DeviceInfo;
-use std::ffi::c_void;
 use std::mem::{size_of, zeroed};
 use std::ptr::{null, null_mut};
 
