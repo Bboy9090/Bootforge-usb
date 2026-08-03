@@ -1,47 +1,42 @@
 //! # libbootforge
 //!
-//! libbootforge is a low-level USB device detection library designed for hardware discovery,
-//! repair workflows, and device preparation.
-//!
-//! The library provides structured access to USB device information including:
-//! - vendor and product identifiers
-//! - device descriptors
-//! - device mode detection
-//! - device fingerprinting
-//! - workflow recommendations
-//! - device connection events
-//!
-//! libbootforge serves as the USB hardware discovery layer for the Bobby's Workshop device ecosystem.
+//! Low-level, read-only-first forensic USB detection, identity correlation, protocol
+//! classification, health reporting, and event intelligence.
 
 pub mod detect;
 pub mod error;
+pub mod forensic;
+pub mod identity;
 pub mod session;
 pub mod types;
 
-// Keep old modules for backward compatibility
+// Backward-compatible modules.
 pub mod descriptors;
 pub mod device;
 pub mod enumeration;
 pub mod events;
 
-// Re-export main types
 pub use detect::scanner::scan_devices;
 pub use error::{BootforgeError, Result};
+pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
+pub use identity::{
+    correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
+};
 pub use types::{
     DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
     FingerprintConfidence, WorkflowRecommendation,
 };
 
-// Legacy exports for backward compatibility
+// Legacy exports retained for existing consumers.
 pub use descriptors::DeviceDescriptor;
 pub use enumeration::enumerate_devices;
 pub use events::DeviceEventMonitor;
 
-/// Scan devices and return JSON string
+/// Scan devices and return a deterministic pretty-printed JSON document.
 pub fn scan_devices_json() -> Result<String> {
     let devices = scan_devices()?;
     serde_json::to_string_pretty(&devices)
-        .map_err(|e| BootforgeError::JsonSerializationFailed(e.to_string()))
+        .map_err(|error| BootforgeError::JsonSerializationFailed(error.to_string()))
 }
 
 #[cfg(test)]
@@ -49,11 +44,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_library_exports() {
-        // Verify all main types are exported
-        let _info: Option<DeviceInfo> = None;
-        let _mode: Option<DeviceMode> = None;
-        let _platform: Option<DevicePlatform> = None;
-        let _family: Option<DeviceFamily> = None;
+    fn public_api_exports_core_forensic_types() {
+        let _device: Option<DeviceInfo> = None;
+        let _identity: Option<DeviceIdentity> = None;
+        let _event: Option<ForensicEvent> = None;
+        let _match: Option<ReconnectMatch> = None;
     }
 }
