@@ -1,5 +1,6 @@
 //! Evidence-grade, normalized USB event records.
 
+use crate::driver::DriverReport;
 use crate::health::HealthReport;
 use crate::identity::{DeviceIdentity, IdentityConfidence, IdentityEvidence};
 use crate::protocol::ProtocolReport;
@@ -55,6 +56,7 @@ pub struct ForensicEvent {
     pub bus_number: u8,
     pub address: u8,
     pub protocol_report: ProtocolReport,
+    pub driver_report: DriverReport,
     pub health_report: HealthReport,
     pub message: Option<String>,
 }
@@ -85,9 +87,16 @@ impl ForensicEvent {
             bus_number: device.bus_number,
             address: device.address,
             protocol_report: ProtocolReport::from_device(device),
+            driver_report: DriverReport::passive_fallback(device),
             health_report: HealthReport::unknown(),
             message,
         }
+    }
+
+    /// Replace the generic passive driver result with native backend evidence.
+    pub fn with_driver_report(mut self, report: DriverReport) -> Self {
+        self.driver_report = report;
+        self
     }
 
     /// Replace the unknown/default health state with watcher-derived evidence.
@@ -106,6 +115,7 @@ impl ForensicEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::driver::{DriverBackend, DriverState};
     use crate::protocol::UsbProtocol;
     use crate::types::{
         DeviceFamily, DeviceFingerprint, DeviceTransport, FingerprintConfidence,
@@ -136,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn event_contains_identity_and_protocol_intelligence() {
+    fn event_contains_identity_protocol_and_driver_intelligence() {
         let event = ForensicEvent::from_device(
             7,
             ForensicEventKind::DeviceConnected,
@@ -154,6 +164,9 @@ mod tests {
             .iter()
             .any(|item| item.protocol == UsbProtocol::Adb));
         assert!(!event.protocol_report.active_probe_performed);
+        assert_eq!(event.driver_report.backend, DriverBackend::LibusbFallback);
+        assert_eq!(event.driver_report.state, DriverState::Present);
+        assert_eq!(event.driver_report.driver_name, None);
         assert_eq!(event.health_report.score, None);
     }
 
@@ -170,6 +183,7 @@ mod tests {
         assert!(!line.contains('\n'));
         assert!(line.contains("DeviceObserved"));
         assert!(line.contains("protocol_report"));
+        assert!(line.contains("driver_report"));
         assert!(line.contains("health_report"));
     }
 }
