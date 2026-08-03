@@ -18,6 +18,7 @@ pub mod events;
 
 pub use detect::scanner::scan_devices;
 pub use error::{BootforgeError, Result};
+pub use events::ForensicEventMonitor;
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
 pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
@@ -49,5 +50,6 @@ mod tests {
         let _identity: Option<DeviceIdentity> = None;
         let _event: Option<ForensicEvent> = None;
         let _match: Option<ReconnectMatch> = None;
+        let _monitor: Option<ForensicEventMonitor> = None;
     }
 }
