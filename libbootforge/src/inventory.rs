@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct InventorySnapshot {
     pub generated_at: DateTime<Utc>,
     pub event_count: usize,
@@ -30,7 +30,7 @@ impl EventInventory {
             .or_default()
             .push(index);
         self.by_kind
-            .entry(kind_key(event.kind).to_string())
+            .entry(kind_key(&event.kind).to_string())
             .or_default()
             .push(index);
         self.lifetime.observe(&event);
@@ -56,7 +56,7 @@ impl EventInventory {
 
     pub fn events_of_kind(&self, kind: ForensicEventKind) -> Vec<&ForensicEvent> {
         self.by_kind
-            .get(kind_key(kind))
+            .get(kind_key(&kind))
             .into_iter()
             .flatten()
             .filter_map(|index| self.events.get(*index))
@@ -87,7 +87,7 @@ impl EventInventory {
     }
 }
 
-fn kind_key(kind: ForensicEventKind) -> &'static str {
+fn kind_key(kind: &ForensicEventKind) -> &'static str {
     match kind {
         ForensicEventKind::DeviceObserved => "device_observed",
         ForensicEventKind::DeviceConnected => "device_connected",
