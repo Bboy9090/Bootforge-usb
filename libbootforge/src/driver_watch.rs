@@ -38,17 +38,39 @@ pub struct DriverChange {
 impl DriverChange {
     pub fn between(previous: &DriverReport, current: &DriverReport) -> Self {
         let mut fields = Vec::new();
-        if previous.backend != current.backend { fields.push(DriverChangeField::Backend); }
-        if previous.state != current.state { fields.push(DriverChangeField::State); }
-        if previous.confidence != current.confidence { fields.push(DriverChangeField::Confidence); }
-        if previous.driver_name != current.driver_name { fields.push(DriverChangeField::DriverName); }
-        if previous.service_name != current.service_name { fields.push(DriverChangeField::ServiceName); }
-        if previous.provider != current.provider { fields.push(DriverChangeField::Provider); }
-        if previous.version != current.version { fields.push(DriverChangeField::Version); }
-        if previous.signed != current.signed { fields.push(DriverChangeField::SignatureState); }
-        if previous.problem_code != current.problem_code { fields.push(DriverChangeField::ProblemCode); }
-        if previous.device_node != current.device_node { fields.push(DriverChangeField::DeviceNode); }
-        if previous.evidence != current.evidence { fields.push(DriverChangeField::Evidence); }
+        if previous.backend != current.backend {
+            fields.push(DriverChangeField::Backend);
+        }
+        if previous.state != current.state {
+            fields.push(DriverChangeField::State);
+        }
+        if previous.confidence != current.confidence {
+            fields.push(DriverChangeField::Confidence);
+        }
+        if previous.driver_name != current.driver_name {
+            fields.push(DriverChangeField::DriverName);
+        }
+        if previous.service_name != current.service_name {
+            fields.push(DriverChangeField::ServiceName);
+        }
+        if previous.provider != current.provider {
+            fields.push(DriverChangeField::Provider);
+        }
+        if previous.version != current.version {
+            fields.push(DriverChangeField::Version);
+        }
+        if previous.signed != current.signed {
+            fields.push(DriverChangeField::SignatureState);
+        }
+        if previous.problem_code != current.problem_code {
+            fields.push(DriverChangeField::ProblemCode);
+        }
+        if previous.device_node != current.device_node {
+            fields.push(DriverChangeField::DeviceNode);
+        }
+        if previous.evidence != current.evidence {
+            fields.push(DriverChangeField::Evidence);
+        }
         Self {
             changed: !fields.is_empty(),
             fields,
@@ -68,7 +90,11 @@ impl DriverStateTracker {
         self.reports.insert(device_id.into(), report);
     }
 
-    pub fn observe(&mut self, device_id: impl Into<String>, report: DriverReport) -> Option<DriverChange> {
+    pub fn observe(
+        &mut self,
+        device_id: impl Into<String>,
+        report: DriverReport,
+    ) -> Option<DriverChange> {
         let device_id = device_id.into();
         let change = self
             .reports
@@ -88,7 +114,9 @@ impl DriverStateTracker {
     }
 
     pub fn merge_identity(&mut self, previous_id: &str, current_id: &str) {
-        if previous_id == current_id { return; }
+        if previous_id == current_id {
+            return;
+        }
         if let Some(report) = self.reports.remove(previous_id) {
             self.reports.entry(current_id.to_string()).or_insert(report);
         }
@@ -164,21 +192,47 @@ impl DriverChangeMonitor {
         }
     }
 
-    pub fn sequence(&self) -> u64 { self.sequence }
+    pub fn sequence(&self) -> u64 {
+        self.sequence
+    }
 
-    pub fn last_wake(&self) -> Option<WakeResult> { self.last_wake }
+    pub fn last_wake(&self) -> Option<WakeResult> {
+        self.last_wake
+    }
 }
 
+#[cfg(windows)]
 fn native_source() -> ObservationSource {
-    #[cfg(windows)]
-    { return ObservationSource::WindowsSetupApi; }
-    #[cfg(target_os = "linux")]
-    { return ObservationSource::LinuxSysfs; }
-    #[cfg(target_os = "macos")]
-    { return ObservationSource::MacOsIoKit; }
-    #[cfg(feature = "arcwyre")]
-    { return ObservationSource::ArcwyreNative; }
-    #[allow(unreachable_code)]
+    ObservationSource::WindowsSetupApi
+}
+
+#[cfg(all(not(windows), target_os = "linux"))]
+fn native_source() -> ObservationSource {
+    ObservationSource::LinuxSysfs
+}
+
+#[cfg(all(not(windows), not(target_os = "linux"), target_os = "macos"))]
+fn native_source() -> ObservationSource {
+    ObservationSource::MacOsIoKit
+}
+
+#[cfg(all(
+    not(windows),
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    feature = "arcwyre"
+))]
+fn native_source() -> ObservationSource {
+    ObservationSource::ArcwyreNative
+}
+
+#[cfg(all(
+    not(windows),
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    not(feature = "arcwyre")
+))]
+fn native_source() -> ObservationSource {
     ObservationSource::Unknown
 }
 

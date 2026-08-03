@@ -13,10 +13,10 @@ pub mod identity;
 pub mod native_driver;
 pub mod notification;
 pub mod protocol;
+pub mod recorder;
 pub mod session;
 pub mod types;
 
-// Backward-compatible modules.
 pub mod descriptors;
 pub mod device;
 pub mod enumeration;
@@ -25,12 +25,9 @@ pub mod events;
 pub use detect::scanner::scan_devices;
 pub use driver::{
     ArcwyreDriverInspector, DriverBackend, DriverConfidence, DriverEvidence, DriverInspector,
-    DriverReport, DriverState, LinuxDriverInspector, MacOsDriverInspector,
-    WindowsDriverInspector,
+    DriverReport, DriverState, LinuxDriverInspector, MacOsDriverInspector, WindowsDriverInspector,
 };
-pub use driver_watch::{
-    DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker,
-};
+pub use driver_watch::{DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker};
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
@@ -39,23 +36,22 @@ pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
 pub use native_driver::inspect_platform_driver;
-pub use notification::{
-    NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult,
-};
+pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
 pub use protocol::{
     ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
+};
+pub use recorder::{
+    verify_session, EvidenceEnvelope, SessionRecorder, VerificationReport, RECORD_SCHEMA_VERSION,
 };
 pub use types::{
     DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
     FingerprintConfidence, WorkflowRecommendation,
 };
 
-// Legacy exports retained for existing consumers.
 pub use descriptors::DeviceDescriptor;
 pub use enumeration::enumerate_devices;
 pub use events::DeviceEventMonitor;
 
-/// Scan devices and return a deterministic pretty-printed JSON document.
 pub fn scan_devices_json() -> Result<String> {
     let devices = scan_devices()?;
     serde_json::to_string_pretty(&devices)
@@ -82,6 +78,8 @@ mod tests {
         let _health: Option<HealthReport> = None;
         let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
+        let _envelope: Option<EvidenceEnvelope> = None;
+        let _verification: Option<VerificationReport> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }

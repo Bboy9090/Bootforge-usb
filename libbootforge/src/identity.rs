@@ -93,7 +93,11 @@ impl DeviceIdentity {
             IdentityConfidence::Low
         };
 
-        Self { stable_id, confidence, evidence }
+        Self {
+            stable_id,
+            confidence,
+            evidence,
+        }
     }
 }
 

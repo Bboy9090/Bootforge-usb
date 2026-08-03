@@ -8,7 +8,6 @@ use super::{
     WindowsDriverInspector,
 };
 use crate::types::DeviceInfo;
-use std::ffi::c_void;
 use std::mem::{size_of, zeroed};
 use std::ptr::{null, null_mut};
 
@@ -73,8 +72,12 @@ extern "system" {
 
 #[link(name = "cfgmgr32")]
 extern "system" {
-    fn CM_Get_DevNode_Status(status: *mut u32, problem_number: *mut u32, dev_inst: u32, flags: u32)
-        -> u32;
+    fn CM_Get_DevNode_Status(
+        status: *mut u32,
+        problem_number: *mut u32,
+        dev_inst: u32,
+        flags: u32,
+    ) -> u32;
 }
 
 #[link(name = "kernel32")]
@@ -93,17 +96,15 @@ impl DriverInspector for WindowsDriverInspector {
 }
 
 unsafe fn inspect_present_device(device: &DeviceInfo) -> crate::Result<DriverReport> {
-    let set = SetupDiGetClassDevsW(
-        null(),
-        null(),
-        0,
-        DIGCF_PRESENT | DIGCF_ALLCLASSES,
-    );
+    let set = SetupDiGetClassDevsW(null(), null(), 0, DIGCF_PRESENT | DIGCF_ALLCLASSES);
 
     if set == INVALID_HANDLE_VALUE {
         return Ok(report_error(
             DriverState::PermissionDenied,
-            format!("SetupDiGetClassDevsW failed with Win32 error {}", GetLastError()),
+            format!(
+                "SetupDiGetClassDevsW failed with Win32 error {}",
+                GetLastError()
+            ),
         ));
     }
 
@@ -152,10 +153,7 @@ unsafe fn inspect_present_device(device: &DeviceInfo) -> crate::Result<DriverRep
         let mut problem = 0_u32;
         let cfg_result = CM_Get_DevNode_Status(&mut status, &mut problem, info.dev_inst, 0);
 
-        let mut evidence = vec![
-            DriverEvidence::BackendRecord,
-            DriverEvidence::DeviceNode,
-        ];
+        let mut evidence = vec![DriverEvidence::BackendRecord, DriverEvidence::DeviceNode];
         if service.is_some() {
             evidence.push(DriverEvidence::ServiceName);
             evidence.push(DriverEvidence::KernelBinding);
@@ -262,7 +260,10 @@ unsafe fn read_property_string(
 }
 
 fn wide_to_string(buffer: &[u16]) -> String {
-    let end = buffer.iter().position(|value| *value == 0).unwrap_or(buffer.len());
+    let end = buffer
+        .iter()
+        .position(|value| *value == 0)
+        .unwrap_or(buffer.len());
     String::from_utf16_lossy(&buffer[..end]).trim().to_string()
 }
 

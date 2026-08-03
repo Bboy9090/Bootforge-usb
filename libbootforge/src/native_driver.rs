@@ -10,7 +10,10 @@ pub fn inspect_platform_driver(device: &DeviceInfo) -> DriverReport {
     inspect_native(device).unwrap_or_else(|_| DriverReport::passive_fallback(device))
 }
 
-#[cfg(all(feature = "arcwyre", not(any(windows, target_os = "linux", target_os = "macos"))))]
+#[cfg(all(
+    feature = "arcwyre",
+    not(any(windows, target_os = "linux", target_os = "macos"))
+))]
 fn inspect_native(device: &DeviceInfo) -> crate::Result<DriverReport> {
     use crate::driver::{ArcwyreDriverInspector, DriverInspector};
     ArcwyreDriverInspector.inspect(device)

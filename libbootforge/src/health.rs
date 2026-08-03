@@ -41,14 +41,7 @@ pub struct HealthReport {
 impl HealthReport {
     /// Compatibility constructor retained for existing consumers.
     pub fn from_counts(disconnect_count: u32, reconnect_count: u32, rapid_reconnects: u32) -> Self {
-        Self::from_evidence(
-            1,
-            0,
-            disconnect_count,
-            reconnect_count,
-            rapid_reconnects,
-            0,
-        )
+        Self::from_evidence(1, 0, disconnect_count, reconnect_count, rapid_reconnects, 0)
     }
 
     /// Build a report only from observable counters.
@@ -210,14 +203,22 @@ impl HealthTracker {
         history.report()
     }
 
-    pub fn record_disconnect(&mut self, device_id: &str, observed_at: DateTime<Utc>) -> HealthReport {
+    pub fn record_disconnect(
+        &mut self,
+        device_id: &str,
+        observed_at: DateTime<Utc>,
+    ) -> HealthReport {
         let history = self.histories.entry(device_id.to_owned()).or_default();
         history.disconnect_count = history.disconnect_count.saturating_add(1);
         history.last_disconnect_at = Some(observed_at);
         history.report()
     }
 
-    pub fn record_reconnect(&mut self, device_id: &str, observed_at: DateTime<Utc>) -> HealthReport {
+    pub fn record_reconnect(
+        &mut self,
+        device_id: &str,
+        observed_at: DateTime<Utc>,
+    ) -> HealthReport {
         let history = self.histories.entry(device_id.to_owned()).or_default();
         history.reconnect_count = history.reconnect_count.saturating_add(1);
         if let Some(disconnected_at) = history.last_disconnect_at {
