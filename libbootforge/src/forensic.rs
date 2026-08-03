@@ -3,12 +3,12 @@
 use crate::driver::DriverReport;
 use crate::health::HealthReport;
 use crate::identity::{DeviceIdentity, IdentityConfidence, IdentityEvidence};
+use crate::native_driver::inspect_platform_driver;
 use crate::protocol::ProtocolReport;
 use crate::types::{DeviceInfo, DeviceMode, DevicePlatform};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// Stable event kinds intended for logs, SDK consumers, and cross-platform backends.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ForensicEventKind {
     DeviceObserved,
@@ -24,7 +24,6 @@ pub enum ForensicEventKind {
     PermissionDenied,
 }
 
-/// Source that produced an observation.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ObservationSource {
     Libusb,
@@ -38,7 +37,6 @@ pub enum ObservationSource {
     Unknown,
 }
 
-/// Normalized platform-independent forensic event.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ForensicEvent {
     pub schema_version: u16,
@@ -62,7 +60,7 @@ pub struct ForensicEvent {
 }
 
 impl ForensicEvent {
-    /// Construct a normalized record from a passive device observation.
+    /// Construct a normalized event and enrich it with passive host-native driver evidence.
     pub fn from_device(
         sequence: u64,
         kind: ForensicEventKind,
@@ -87,25 +85,22 @@ impl ForensicEvent {
             bus_number: device.bus_number,
             address: device.address,
             protocol_report: ProtocolReport::from_device(device),
-            driver_report: DriverReport::passive_fallback(device),
+            driver_report: inspect_platform_driver(device),
             health_report: HealthReport::unknown(),
             message,
         }
     }
 
-    /// Replace the generic passive driver result with native backend evidence.
     pub fn with_driver_report(mut self, report: DriverReport) -> Self {
         self.driver_report = report;
         self
     }
 
-    /// Replace the unknown/default health state with watcher-derived evidence.
     pub fn with_health_report(mut self, report: HealthReport) -> Self {
         self.health_report = report;
         self
     }
 
-    /// Serialize one complete record suitable for append-only JSONL evidence streams.
     pub fn to_json_line(&self) -> crate::Result<String> {
         serde_json::to_string(self)
             .map_err(|error| crate::BootforgeError::JsonSerializationFailed(error.to_string()))
@@ -115,7 +110,6 @@ impl ForensicEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::driver::{DriverBackend, DriverState};
     use crate::protocol::UsbProtocol;
     use crate::types::{
         DeviceFamily, DeviceFingerprint, DeviceTransport, FingerprintConfidence,
@@ -124,12 +118,12 @@ mod tests {
 
     fn fixture() -> DeviceInfo {
         DeviceInfo {
-            bus_number: 1,
-            address: 4,
-            vendor_id: 0x18d1,
-            product_id: 0x4ee1,
-            vendor_name: Some("Google".into()),
-            manufacturer: Some("Google".into()),
+            bus_number: 255,
+            address: 255,
+            vendor_id: 0xffff,
+            product_id: 0xffff,
+            vendor_name: Some("Test".into()),
+            manufacturer: Some("Test".into()),
             product_name: Some("Android ADB".into()),
             serial_number: Some("SERIAL1".into()),
             platform: DevicePlatform::Android,
@@ -164,9 +158,7 @@ mod tests {
             .iter()
             .any(|item| item.protocol == UsbProtocol::Adb));
         assert!(!event.protocol_report.active_probe_performed);
-        assert_eq!(event.driver_report.backend, DriverBackend::LibusbFallback);
-        assert_eq!(event.driver_report.state, DriverState::Present);
-        assert_eq!(event.driver_report.driver_name, None);
+        assert!(event.driver_report.message.is_some());
         assert_eq!(event.health_report.score, None);
     }
 
