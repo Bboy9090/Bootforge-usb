@@ -201,24 +201,38 @@ impl DriverChangeMonitor {
     }
 }
 
+#[cfg(windows)]
 fn native_source() -> ObservationSource {
-    #[cfg(windows)]
-    {
-        return ObservationSource::WindowsSetupApi;
-    }
-    #[cfg(target_os = "linux")]
-    {
-        return ObservationSource::LinuxSysfs;
-    }
-    #[cfg(target_os = "macos")]
-    {
-        return ObservationSource::MacOsIoKit;
-    }
-    #[cfg(feature = "arcwyre")]
-    {
-        return ObservationSource::ArcwyreNative;
-    }
-    #[allow(unreachable_code)]
+    ObservationSource::WindowsSetupApi
+}
+
+#[cfg(all(not(windows), target_os = "linux"))]
+fn native_source() -> ObservationSource {
+    ObservationSource::LinuxSysfs
+}
+
+#[cfg(all(not(windows), not(target_os = "linux"), target_os = "macos"))]
+fn native_source() -> ObservationSource {
+    ObservationSource::MacOsIoKit
+}
+
+#[cfg(all(
+    not(windows),
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    feature = "arcwyre"
+))]
+fn native_source() -> ObservationSource {
+    ObservationSource::ArcwyreNative
+}
+
+#[cfg(all(
+    not(windows),
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    not(feature = "arcwyre")
+))]
+fn native_source() -> ObservationSource {
     ObservationSource::Unknown
 }
 
