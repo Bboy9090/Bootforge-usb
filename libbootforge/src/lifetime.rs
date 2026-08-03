@@ -23,8 +23,8 @@ impl DeviceLifetime {
     fn new(event: &ForensicEvent) -> Self {
         Self {
             device_id: event.device_id.clone(),
-            first_seen: event.timestamp,
-            last_seen: event.timestamp,
+            first_seen: event.observed_at,
+            last_seen: event.observed_at,
             sessions: 0,
             disconnects: 0,
             reconnects: 0,
@@ -55,20 +55,20 @@ impl LifetimeTracker {
             .records
             .entry(event.device_id.clone())
             .or_insert_with(|| DeviceLifetime::new(event));
-        record.last_seen = event.timestamp;
+        record.last_seen = event.observed_at;
         record.observed_events = record.observed_events.saturating_add(1);
         match event.kind {
             ForensicEventKind::DeviceConnected => {
                 if record.connected_since.is_none() {
                     record.sessions = record.sessions.saturating_add(1);
-                    record.connected_since = Some(event.timestamp);
+                    record.connected_since = Some(event.observed_at);
                 }
             }
             ForensicEventKind::DeviceReconnected => {
                 record.reconnects = record.reconnects.saturating_add(1);
                 if record.connected_since.is_none() {
                     record.sessions = record.sessions.saturating_add(1);
-                    record.connected_since = Some(event.timestamp);
+                    record.connected_since = Some(event.observed_at);
                 }
             }
             ForensicEventKind::DeviceDisconnected => {
@@ -76,7 +76,7 @@ impl LifetimeTracker {
                 if let Some(start) = record.connected_since.take() {
                     record.accumulated_runtime_ms = record
                         .accumulated_runtime_ms
-                        .saturating_add((event.timestamp - start).num_milliseconds().max(0));
+                        .saturating_add((event.observed_at - start).num_milliseconds().max(0));
                 }
             }
             ForensicEventKind::ModeChanged => {
@@ -90,9 +90,11 @@ impl LifetimeTracker {
     pub fn get(&self, device_id: &str) -> Option<&DeviceLifetime> {
         self.records.get(device_id)
     }
+
     pub fn records(&self) -> impl Iterator<Item = &DeviceLifetime> {
         self.records.values()
     }
+
     pub fn merge_identity(&mut self, previous_id: &str, current_id: &str) {
         if previous_id == current_id {
             return;
