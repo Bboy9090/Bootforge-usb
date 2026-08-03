@@ -1,0 +1,59 @@
+name: Forensic USB Core
+
+on:
+  pull_request:
+    paths:
+      - 'libbootforge/**'
+      - '.github/workflows/forensic-usb-core.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'libbootforge/**'
+      - '.github/workflows/forensic-usb-core.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: ${{ matrix.os }} / Rust ${{ matrix.rust }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Check library
+        run: cargo check -p libbootforge --all-targets
+      - name: Clippy
+        run: cargo clippy -p libbootforge --all-targets -- -D warnings
+      - name: Unit tests
+        run: cargo test -p libbootforge --all-targets
+
+  arcwyre-contract:
+    name: ARCWYRE feature contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check -p libbootforge --features arcwyre
+
+  docs:
+    name: Rustdoc warnings
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc -p libbootforge --no-deps
