@@ -5,6 +5,7 @@
 
 pub mod detect;
 pub mod driver;
+pub mod driver_watch;
 pub mod error;
 pub mod forensic;
 pub mod health;
@@ -25,6 +26,9 @@ pub use driver::{
     ArcwyreDriverInspector, DriverBackend, DriverConfidence, DriverEvidence, DriverInspector,
     DriverReport, DriverState, LinuxDriverInspector, MacOsDriverInspector,
     WindowsDriverInspector,
+};
+pub use driver_watch::{
+    DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker,
 };
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
@@ -66,6 +70,9 @@ mod tests {
         let _match: Option<ReconnectMatch> = None;
         let _protocol: Option<ProtocolReport> = None;
         let _driver: Option<DriverReport> = None;
+        let _driver_change: Option<DriverChange> = None;
+        let _driver_tracker: Option<DriverStateTracker> = None;
+        let _driver_monitor: Option<DriverChangeMonitor> = None;
         let _health: Option<HealthReport> = None;
         let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
