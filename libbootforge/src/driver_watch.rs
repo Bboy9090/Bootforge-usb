@@ -1,18 +1,17 @@
 //! Driver-state change detection for forensic watcher integration.
 //!
-//! This layer compares passive native driver reports over time. Platform notification
-//! backends may wake the watcher, while this comparator remains the single source of truth
-//! for deciding whether a normalized `DriverChanged` event should be emitted.
+//! Native backends may wake this monitor, but normalized report comparison remains the single
+//! source of truth for deciding whether a `DriverChanged` event occurred.
 
 use crate::driver::DriverReport;
 use crate::forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
 use crate::identity::DeviceIdentity;
+use crate::notification::{NotificationWake, PollingWake, WakeResult};
 use crate::{inspect_platform_driver, scan_devices, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-/// Fields that changed between two driver observations.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DriverChangeField {
     Backend,
@@ -28,7 +27,6 @@ pub enum DriverChangeField {
     Evidence,
 }
 
-/// Explained difference between two normalized driver reports.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DriverChange {
     pub changed: bool,
@@ -51,7 +49,6 @@ impl DriverChange {
         if previous.problem_code != current.problem_code { fields.push(DriverChangeField::ProblemCode); }
         if previous.device_node != current.device_node { fields.push(DriverChangeField::DeviceNode); }
         if previous.evidence != current.evidence { fields.push(DriverChangeField::Evidence); }
-
         Self {
             changed: !fields.is_empty(),
             fields,
@@ -61,7 +58,6 @@ impl DriverChange {
     }
 }
 
-/// Stateful cache of the last native driver report for each stable identity.
 #[derive(Debug, Default)]
 pub struct DriverStateTracker {
     reports: HashMap<String, DriverReport>,
@@ -72,7 +68,6 @@ impl DriverStateTracker {
         self.reports.insert(device_id.into(), report);
     }
 
-    /// Record a report and return an explained change when one occurred.
     pub fn observe(&mut self, device_id: impl Into<String>, report: DriverReport) -> Option<DriverChange> {
         let device_id = device_id.into();
         let change = self
@@ -100,23 +95,29 @@ impl DriverStateTracker {
     }
 }
 
-/// Passive driver watcher that emits normalized `DriverChanged` forensic events.
-///
-/// It uses the host-native inspector selected by `inspect_platform_driver`. A future
-/// SetupAPI/CfgMgr32 notification backend may wake this watcher immediately; polling remains
-/// the portable and testable baseline.
+/// Driver watcher using a pluggable wake source and passive native report comparison.
 pub struct DriverChangeMonitor {
     source: ObservationSource,
     sequence: u64,
     tracker: DriverStateTracker,
+    wake: Box<dyn NotificationWake>,
+    last_wake: Option<WakeResult>,
 }
 
 impl DriverChangeMonitor {
+    /// Construct with the portable polling wake source.
     pub fn new() -> Result<Self> {
+        Self::with_wake(Box::new(PollingWake::new(Duration::from_millis(250))))
+    }
+
+    /// Construct with a native or custom wake source.
+    pub fn with_wake(wake: Box<dyn NotificationWake>) -> Result<Self> {
         let mut monitor = Self {
             source: native_source(),
             sequence: 0,
             tracker: DriverStateTracker::default(),
+            wake,
+            last_wake: None,
         };
         for device in scan_devices()? {
             let id = DeviceIdentity::from_device(&device).stable_id;
@@ -132,14 +133,13 @@ impl DriverChangeMonitor {
             let report = inspect_platform_driver(&device);
             if let Some(change) = self.tracker.observe(id, report.clone()) {
                 self.sequence = self.sequence.saturating_add(1);
-                let message = format!("driver report changed: {:?}", change.fields);
                 events.push(
                     ForensicEvent::from_device(
                         self.sequence,
                         ForensicEventKind::DriverChanged,
                         self.source.clone(),
                         &device,
-                        Some(message),
+                        Some(format!("driver report changed: {:?}", change.fields)),
                     )
                     .with_driver_report(report),
                 );
@@ -148,20 +148,25 @@ impl DriverChangeMonitor {
         Ok(events)
     }
 
+    /// Wait for a native/polling wake, then rescan and compare normalized reports.
     pub fn wait_for_events(&mut self, timeout: Duration) -> Result<Vec<ForensicEvent>> {
-        let start = std::time::Instant::now();
+        let start = Instant::now();
         loop {
+            let remaining = timeout.saturating_sub(start.elapsed());
+            if remaining.is_zero() {
+                return Ok(Vec::new());
+            }
+            self.last_wake = Some(self.wake.wait(remaining));
             let events = self.poll()?;
             if !events.is_empty() || start.elapsed() >= timeout {
                 return Ok(events);
             }
-            std::thread::sleep(Duration::from_millis(250));
         }
     }
 
-    pub fn sequence(&self) -> u64 {
-        self.sequence
-    }
+    pub fn sequence(&self) -> u64 { self.sequence }
+
+    pub fn last_wake(&self) -> Option<WakeResult> { self.last_wake }
 }
 
 fn native_source() -> ObservationSource {
@@ -181,6 +186,7 @@ fn native_source() -> ObservationSource {
 mod tests {
     use super::*;
     use crate::driver::{DriverBackend, DriverConfidence, DriverEvidence, DriverState};
+    use crate::notification::{NotificationSignal, WakeReason};
 
     fn report(state: DriverState, service: Option<&str>) -> DriverReport {
         DriverReport {
@@ -216,5 +222,13 @@ mod tests {
             .expect("change expected");
         assert!(change.fields.contains(&DriverChangeField::State));
         assert!(change.fields.contains(&DriverChangeField::ServiceName));
+    }
+
+    #[test]
+    fn notification_signal_reports_native_wake() {
+        let signal = NotificationSignal::default();
+        signal.notify();
+        let result = signal.wait(Duration::from_millis(1));
+        assert_eq!(result.reason, WakeReason::NativeNotification);
     }
 }
