@@ -1,14 +1,16 @@
 //! Cross-platform, read-only driver visibility contract.
 //!
-//! The core library never installs, updates, replaces, or binds drivers. Platform backends
-//! may populate this report from SetupAPI/CfgMgr32, sysfs/udev, IOKit, or ARCWYRE-native
-//! facilities. Missing evidence remains explicit rather than being guessed.
+//! The core library never installs, updates, replaces, or binds drivers. Native backends
+//! only inspect operating-system state. Missing evidence remains explicit.
 
 use crate::types::{DeviceInfo, DevicePlatform};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+
+#[cfg(windows)]
+mod windows;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DriverBackend {
@@ -95,7 +97,7 @@ impl DriverReport {
             ],
             message: Some(
                 "device is visible to passive enumeration; native driver metadata was not queried"
-                    .to_string(),
+                    .into(),
             ),
         }
     }
@@ -168,10 +170,13 @@ impl DriverInspector for LinuxDriverInspector {
                 continue;
             }
 
-            let driver_link = path.join("driver");
-            let driver_name = fs::read_link(&driver_link)
+            let driver_name = fs::read_link(path.join("driver"))
                 .ok()
-                .and_then(|target| target.file_name().map(|name| name.to_string_lossy().into_owned()));
+                .and_then(|target| {
+                    target
+                        .file_name()
+                        .map(|name| name.to_string_lossy().into_owned())
+                });
             let bound = driver_name.is_some();
             let mut evidence = vec![DriverEvidence::BackendRecord, DriverEvidence::DeviceNode];
             if bound {
@@ -180,7 +185,11 @@ impl DriverInspector for LinuxDriverInspector {
 
             return Ok(DriverReport {
                 backend: self.backend(),
-                state: if bound { DriverState::Bound } else { DriverState::Present },
+                state: if bound {
+                    DriverState::Bound
+                } else {
+                    DriverState::Present
+                },
                 confidence: DriverConfidence::Exact,
                 driver_name: driver_name.clone(),
                 service_name: driver_name,
@@ -219,33 +228,62 @@ fn read_u8(path: PathBuf) -> Option<u8> {
     fs::read_to_string(path).ok()?.trim().parse().ok()
 }
 
-macro_rules! passive_stub {
-    ($name:ty, $backend:expr, $message:expr) => {
-        impl DriverInspector for $name {
-            fn backend(&self) -> DriverBackend { $backend }
-            fn inspect(&self, _device: &DeviceInfo) -> crate::Result<DriverReport> {
-                Ok(DriverReport {
-                    backend: self.backend(),
-                    state: DriverState::Unknown,
-                    confidence: DriverConfidence::Unknown,
-                    driver_name: None,
-                    service_name: None,
-                    provider: None,
-                    version: None,
-                    signed: None,
-                    problem_code: None,
-                    device_node: None,
-                    evidence: Vec::new(),
-                    message: Some($message.to_string()),
-                })
-            }
-        }
-    };
+fn unknown_native_report(backend: DriverBackend, message: &str) -> DriverReport {
+    DriverReport {
+        backend,
+        state: DriverState::Unknown,
+        confidence: DriverConfidence::Unknown,
+        driver_name: None,
+        service_name: None,
+        provider: None,
+        version: None,
+        signed: None,
+        problem_code: None,
+        device_node: None,
+        evidence: Vec::new(),
+        message: Some(message.into()),
+    }
 }
 
-passive_stub!(WindowsDriverInspector, DriverBackend::WindowsSetupApi, "Windows SetupAPI/CfgMgr32 enrichment adapter is defined but not yet implemented");
-passive_stub!(MacOsDriverInspector, DriverBackend::MacOsIoKit, "macOS IOKit enrichment adapter is defined but not yet implemented");
-passive_stub!(ArcwyreDriverInspector, DriverBackend::ArcwyreNative, "ARCWYRE native driver enrichment adapter is defined but not yet implemented");
+#[cfg(not(windows))]
+impl DriverInspector for WindowsDriverInspector {
+    fn backend(&self) -> DriverBackend {
+        DriverBackend::WindowsSetupApi
+    }
+
+    fn inspect(&self, _device: &DeviceInfo) -> crate::Result<DriverReport> {
+        Ok(unknown_native_report(
+            self.backend(),
+            "Windows SetupAPI inspection is unavailable on this operating system",
+        ))
+    }
+}
+
+impl DriverInspector for MacOsDriverInspector {
+    fn backend(&self) -> DriverBackend {
+        DriverBackend::MacOsIoKit
+    }
+
+    fn inspect(&self, _device: &DeviceInfo) -> crate::Result<DriverReport> {
+        Ok(unknown_native_report(
+            self.backend(),
+            "macOS IOKit enrichment adapter is defined but not yet implemented",
+        ))
+    }
+}
+
+impl DriverInspector for ArcwyreDriverInspector {
+    fn backend(&self) -> DriverBackend {
+        DriverBackend::ArcwyreNative
+    }
+
+    fn inspect(&self, _device: &DeviceInfo) -> crate::Result<DriverReport> {
+        Ok(unknown_native_report(
+            self.backend(),
+            "ARCWYRE native driver enrichment adapter is defined but not yet implemented",
+        ))
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -288,11 +326,12 @@ mod tests {
         assert!(!report.is_platform_enriched());
     }
 
+    #[cfg(not(windows))]
     #[test]
-    fn unimplemented_native_adapter_reports_unknown() {
+    fn windows_backend_is_explicitly_unavailable_off_windows() {
         let report = WindowsDriverInspector
             .inspect(&fixture(DevicePlatform::Android))
-            .expect("stub must return a report");
+            .expect("adapter must return an honest report");
         assert_eq!(report.backend, DriverBackend::WindowsSetupApi);
         assert_eq!(report.state, DriverState::Unknown);
     }
