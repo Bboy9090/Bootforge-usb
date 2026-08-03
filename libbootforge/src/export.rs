@@ -22,7 +22,9 @@ pub fn export_inventory_json(snapshot: &InventorySnapshot) -> Result<(String, Ex
 }
 
 pub fn export_inventory_csv(snapshot: &InventorySnapshot) -> (String, ExportManifest) {
-    let mut output = String::from("sequence,observed_at,kind,source,device_id,vid,pid,bus,address,message\n");
+    let mut output = String::from(
+        "sequence,observed_at,kind,source,device_id,vid,pid,bus,address,message\n",
+    );
     for event in &snapshot.events {
         let row = [
             event.sequence.to_string(),
@@ -30,10 +32,10 @@ pub fn export_inventory_csv(snapshot: &InventorySnapshot) -> (String, ExportMani
             csv(&format!("{:?}", event.kind)),
             csv(&format!("{:?}", event.source)),
             csv(&event.device_id),
-            format!("{:04x}", event.vid),
-            format!("{:04x}", event.pid),
-            event.bus.map(|value| value.to_string()).unwrap_or_default(),
-            event.address.map(|value| value.to_string()).unwrap_or_default(),
+            format!("{:04x}", event.vendor_id),
+            format!("{:04x}", event.product_id),
+            event.bus_number.to_string(),
+            event.address.to_string(),
             csv(event.message.as_deref().unwrap_or_default()),
         ]
         .join(",");
