@@ -1,15 +1,11 @@
 //! Tamper-evident append-only forensic session recording.
-//!
-//! Each JSONL envelope contains one normalized forensic event and a SHA-256 chain link.
-//! The recorder never modifies prior records. Verification recomputes every link and rejects
-//! missing, reordered, or altered lines.
 
 use crate::{BootforgeError, ForensicEvent, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Error, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 
 pub const RECORD_SCHEMA_VERSION: u16 = 1;
@@ -29,25 +25,19 @@ impl EvidenceEnvelope {
         previous_hash: Option<&str>,
         event: &ForensicEvent,
     ) -> Result<String> {
-        serde_json::to_string(&(
-            RECORD_SCHEMA_VERSION,
-            recorded_at,
-            previous_hash,
-            event,
-        ))
-        .map_err(|error| BootforgeError::JsonSerializationFailed(error.to_string()))
+        serde_json::to_string(&(RECORD_SCHEMA_VERSION, recorded_at, previous_hash, event))
+            .map_err(|error| BootforgeError::JsonSerializationFailed(error.to_string()))
     }
 
     pub fn create(previous_hash: Option<String>, event: ForensicEvent) -> Result<Self> {
         let recorded_at = Utc::now();
         let payload = Self::unsigned_payload(recorded_at, previous_hash.as_deref(), &event)?;
-        let current_hash = sha256_hex(payload.as_bytes());
         Ok(Self {
             schema_version: RECORD_SCHEMA_VERSION,
             recorded_at,
             previous_hash,
             event,
-            current_hash,
+            current_hash: sha256_hex(payload.as_bytes()),
         })
     }
 
@@ -86,8 +76,7 @@ impl SessionRecorder {
             .create(true)
             .truncate(true)
             .write(true)
-            .open(&path)
-            .map_err(|error| BootforgeError::Io(error.to_string()))?;
+            .open(&path)?;
         Ok(Self {
             path,
             file,
@@ -100,16 +89,15 @@ impl SessionRecorder {
         let path = path.as_ref().to_path_buf();
         let verification = verify_session(&path)?;
         if !verification.valid {
-            return Err(BootforgeError::Io(format!(
-                "refusing to resume invalid evidence chain at record {:?}",
-                verification.first_invalid_record
+            return Err(BootforgeError::IoError(Error::new(
+                ErrorKind::InvalidData,
+                format!(
+                    "refusing to resume invalid evidence chain at record {:?}",
+                    verification.first_invalid_record
+                ),
             )));
         }
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)
-            .map_err(|error| BootforgeError::Io(error.to_string()))?;
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
         Ok(Self {
             path,
             file,
@@ -120,11 +108,8 @@ impl SessionRecorder {
 
     pub fn append(&mut self, event: ForensicEvent) -> Result<EvidenceEnvelope> {
         let envelope = EvidenceEnvelope::create(self.last_hash.clone(), event)?;
-        writeln!(self.file, "{}", envelope.to_json_line()?)
-            .map_err(|error| BootforgeError::Io(error.to_string()))?;
-        self.file
-            .flush()
-            .map_err(|error| BootforgeError::Io(error.to_string()))?;
+        writeln!(self.file, "{}", envelope.to_json_line()?)?;
+        self.file.flush()?;
         self.last_hash = Some(envelope.current_hash.clone());
         self.records_written = self.records_written.saturating_add(1);
         Ok(envelope)
@@ -162,12 +147,12 @@ pub fn verify_session(path: impl AsRef<Path>) -> Result<VerificationReport> {
         });
     }
 
-    let file = File::open(path).map_err(|error| BootforgeError::Io(error.to_string()))?;
+    let file = File::open(path)?;
     let mut previous_hash: Option<String> = None;
     let mut records = 0_u64;
 
     for line in BufReader::new(file).lines() {
-        let line = line.map_err(|error| BootforgeError::Io(error.to_string()))?;
+        let line = line?;
         if line.trim().is_empty() {
             continue;
         }
