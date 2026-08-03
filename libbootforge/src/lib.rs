@@ -3,6 +3,9 @@
 //! Low-level, read-only-first forensic USB detection, identity correlation, protocol
 //! classification, driver visibility, health reporting, and event intelligence.
 
+pub mod anomaly;
+pub mod composite;
+pub mod descriptor_intelligence;
 pub mod detect;
 pub mod driver;
 pub mod driver_watch;
@@ -14,6 +17,7 @@ pub mod identity;
 pub mod lifetime;
 pub mod native_driver;
 pub mod notification;
+pub mod performance;
 pub mod protocol;
 pub mod recorder;
 pub mod session;
@@ -25,6 +29,11 @@ pub mod device;
 pub mod enumeration;
 pub mod events;
 
+pub use anomaly::{analyze_passively, AnomalyFinding, AnomalyKind, AnomalySeverity};
+pub use composite::{CompositeInterface, CompositeReport};
+pub use descriptor_intelligence::{
+    DecodedDescriptor, DescriptorIssue, DescriptorKind, DescriptorSnapshot, MAX_DESCRIPTOR_BYTES,
+};
 pub use detect::scanner::scan_devices;
 pub use driver::{
     ArcwyreDriverInspector, DriverBackend, DriverConfidence, DriverEvidence, DriverInspector,
@@ -45,6 +54,7 @@ pub use identity::{
 pub use lifetime::{DeviceLifetime, LifetimeTracker};
 pub use native_driver::inspect_platform_driver;
 pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
+pub use performance::{BoundedEventQueue, PerformanceMetrics};
 pub use protocol::{
     ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
 };
@@ -96,6 +106,10 @@ mod tests {
         let _topology: Option<TopologySnapshot> = None;
         let _lifetime: Option<DeviceLifetime> = None;
         let _fingerprint: Option<ForensicFingerprint> = None;
+        let _descriptor_snapshot: Option<DescriptorSnapshot> = None;
+        let _composite: Option<CompositeReport> = None;
+        let _finding: Option<AnomalyFinding> = None;
+        let _metrics: Option<PerformanceMetrics> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }
