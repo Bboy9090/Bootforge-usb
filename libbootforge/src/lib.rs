@@ -33,17 +33,29 @@ pub use driver::{
 pub use driver_watch::{DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker};
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
-pub use fingerprint::{ForensicFingerprint, ForensicFingerprintConfidence, ForensicFingerprintEvidence, FORENSIC_FINGERPRINT_SCHEMA_VERSION};
+pub use fingerprint::{
+    ForensicFingerprint, ForensicFingerprintConfidence, ForensicFingerprintEvidence,
+    FORENSIC_FINGERPRINT_SCHEMA_VERSION,
+};
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
 pub use health::{HealthReport, HealthSignal, HealthState, HealthTracker};
-pub use identity::{correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch};
+pub use identity::{
+    correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
+};
 pub use lifetime::{DeviceLifetime, LifetimeTracker};
 pub use native_driver::inspect_platform_driver;
 pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
-pub use protocol::{ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol};
-pub use recorder::{verify_session, EvidenceEnvelope, SessionRecorder, VerificationReport, RECORD_SCHEMA_VERSION};
+pub use protocol::{
+    ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
+};
+pub use recorder::{
+    verify_session, EvidenceEnvelope, SessionRecorder, VerificationReport, RECORD_SCHEMA_VERSION,
+};
 pub use topology::{TopologyNode, TopologyNodeKind, TopologyPath, TopologySnapshot};
-pub use types::{DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport, FingerprintConfidence, WorkflowRecommendation};
+pub use types::{
+    DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
+    FingerprintConfidence, WorkflowRecommendation,
+};
 
 pub use descriptors::DeviceDescriptor;
 pub use enumeration::enumerate_devices;
