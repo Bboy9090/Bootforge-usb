@@ -22,7 +22,7 @@ pub use detect::scanner::scan_devices;
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
-pub use health::{HealthReport, HealthSignal, HealthState};
+pub use health::{HealthReport, HealthSignal, HealthState, HealthTracker};
 pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
@@ -58,6 +58,7 @@ mod tests {
         let _match: Option<ReconnectMatch> = None;
         let _protocol: Option<ProtocolReport> = None;
         let _health: Option<HealthReport> = None;
+        let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
     }
 }
