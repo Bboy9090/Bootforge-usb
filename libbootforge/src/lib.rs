@@ -9,6 +9,7 @@ pub mod error;
 pub mod forensic;
 pub mod health;
 pub mod identity;
+pub mod native_driver;
 pub mod protocol;
 pub mod session;
 pub mod types;
@@ -32,6 +33,7 @@ pub use health::{HealthReport, HealthSignal, HealthState, HealthTracker};
 pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
+pub use native_driver::inspect_platform_driver;
 pub use protocol::{
     ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
 };
@@ -67,5 +69,6 @@ mod tests {
         let _health: Option<HealthReport> = None;
         let _health_tracker: Option<HealthTracker> = None;
         let _watcher: Option<ForensicEventMonitor> = None;
+        let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }
