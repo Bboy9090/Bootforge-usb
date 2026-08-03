@@ -7,14 +7,17 @@ pub mod detect;
 pub mod driver;
 pub mod driver_watch;
 pub mod error;
+pub mod fingerprint;
 pub mod forensic;
 pub mod health;
 pub mod identity;
+pub mod lifetime;
 pub mod native_driver;
 pub mod notification;
 pub mod protocol;
 pub mod recorder;
 pub mod session;
+pub mod topology;
 pub mod types;
 
 pub mod descriptors;
@@ -30,23 +33,17 @@ pub use driver::{
 pub use driver_watch::{DriverChange, DriverChangeField, DriverChangeMonitor, DriverStateTracker};
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
+pub use fingerprint::{ForensicFingerprint, ForensicFingerprintConfidence, ForensicFingerprintEvidence, FORENSIC_FINGERPRINT_SCHEMA_VERSION};
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
 pub use health::{HealthReport, HealthSignal, HealthState, HealthTracker};
-pub use identity::{
-    correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
-};
+pub use identity::{correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch};
+pub use lifetime::{DeviceLifetime, LifetimeTracker};
 pub use native_driver::inspect_platform_driver;
 pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
-pub use protocol::{
-    ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
-};
-pub use recorder::{
-    verify_session, EvidenceEnvelope, SessionRecorder, VerificationReport, RECORD_SCHEMA_VERSION,
-};
-pub use types::{
-    DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
-    FingerprintConfidence, WorkflowRecommendation,
-};
+pub use protocol::{ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol};
+pub use recorder::{verify_session, EvidenceEnvelope, SessionRecorder, VerificationReport, RECORD_SCHEMA_VERSION};
+pub use topology::{TopologyNode, TopologyNodeKind, TopologyPath, TopologySnapshot};
+pub use types::{DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport, FingerprintConfidence, WorkflowRecommendation};
 
 pub use descriptors::DeviceDescriptor;
 pub use enumeration::enumerate_devices;
@@ -56,6 +53,10 @@ pub fn scan_devices_json() -> Result<String> {
     let devices = scan_devices()?;
     serde_json::to_string_pretty(&devices)
         .map_err(|error| BootforgeError::JsonSerializationFailed(error.to_string()))
+}
+
+pub fn scan_topology() -> Result<TopologySnapshot> {
+    Ok(TopologySnapshot::from_devices(&scan_devices()?))
 }
 
 #[cfg(test)]
@@ -80,6 +81,9 @@ mod tests {
         let _watcher: Option<ForensicEventMonitor> = None;
         let _envelope: Option<EvidenceEnvelope> = None;
         let _verification: Option<VerificationReport> = None;
+        let _topology: Option<TopologySnapshot> = None;
+        let _lifetime: Option<DeviceLifetime> = None;
+        let _fingerprint: Option<ForensicFingerprint> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }
