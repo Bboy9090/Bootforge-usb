@@ -6,7 +6,9 @@
 pub mod detect;
 pub mod error;
 pub mod forensic;
+pub mod health;
 pub mod identity;
+pub mod protocol;
 pub mod session;
 pub mod types;
 
@@ -20,8 +22,12 @@ pub use detect::scanner::scan_devices;
 pub use error::{BootforgeError, Result};
 pub use events::ForensicEventMonitor;
 pub use forensic::{ForensicEvent, ForensicEventKind, ObservationSource};
+pub use health::{HealthReport, HealthSignal, HealthState};
 pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
+};
+pub use protocol::{
+    ProtocolConfidence, ProtocolEvidence, ProtocolObservation, ProtocolReport, UsbProtocol,
 };
 pub use types::{
     DeviceFamily, DeviceFingerprint, DeviceInfo, DeviceMode, DevicePlatform, DeviceTransport,
@@ -50,6 +56,8 @@ mod tests {
         let _identity: Option<DeviceIdentity> = None;
         let _event: Option<ForensicEvent> = None;
         let _match: Option<ReconnectMatch> = None;
-        let _monitor: Option<ForensicEventMonitor> = None;
+        let _protocol: Option<ProtocolReport> = None;
+        let _health: Option<HealthReport> = None;
+        let _watcher: Option<ForensicEventMonitor> = None;
     }
 }
