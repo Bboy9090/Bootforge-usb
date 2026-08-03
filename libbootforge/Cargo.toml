@@ -7,6 +7,10 @@ license = "MIT OR Apache-2.0"
 description = "Low-level forensic USB detection, identity correlation, and event intelligence library"
 repository = "https://github.com/Bboy9090/Bootforge-usb"
 
+[features]
+default = []
+arcwyre = []
+
 [dependencies]
 rusb = "=0.9.4"
 serde = { version = "=1.0.228", features = ["derive"] }
