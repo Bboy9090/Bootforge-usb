@@ -14,6 +14,7 @@ pub mod fingerprint;
 pub mod forensic;
 pub mod health;
 pub mod identity;
+pub mod inventory;
 pub mod lifetime;
 pub mod native_driver;
 pub mod notification;
@@ -51,6 +52,7 @@ pub use health::{HealthReport, HealthSignal, HealthState, HealthTracker};
 pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
+pub use inventory::{EventInventory, InventorySnapshot};
 pub use lifetime::{DeviceLifetime, LifetimeTracker};
 pub use native_driver::inspect_platform_driver;
 pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
@@ -110,6 +112,8 @@ mod tests {
         let _composite: Option<CompositeReport> = None;
         let _finding: Option<AnomalyFinding> = None;
         let _metrics: Option<PerformanceMetrics> = None;
+        let _inventory: Option<EventInventory> = None;
+        let _inventory_snapshot: Option<InventorySnapshot> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
     }
 }
