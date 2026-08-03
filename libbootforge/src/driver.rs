@@ -120,7 +120,10 @@ impl DriverReport {
     }
 
     pub fn is_platform_enriched(&self) -> bool {
-        !matches!(self.backend, DriverBackend::LibusbFallback | DriverBackend::Unknown)
+        !matches!(
+            self.backend,
+            DriverBackend::LibusbFallback | DriverBackend::Unknown
+        )
     }
 }
 
@@ -170,13 +173,11 @@ impl DriverInspector for LinuxDriverInspector {
                 continue;
             }
 
-            let driver_name = fs::read_link(path.join("driver"))
-                .ok()
-                .and_then(|target| {
-                    target
-                        .file_name()
-                        .map(|name| name.to_string_lossy().into_owned())
-                });
+            let driver_name = fs::read_link(path.join("driver")).ok().and_then(|target| {
+                target
+                    .file_name()
+                    .map(|name| name.to_string_lossy().into_owned())
+            });
             let bound = driver_name.is_some();
             let mut evidence = vec![DriverEvidence::BackendRecord, DriverEvidence::DeviceNode];
             if bound {

@@ -47,11 +47,8 @@ impl EvidenceEnvelope {
         {
             return Ok(false);
         }
-        let payload = Self::unsigned_payload(
-            self.recorded_at,
-            self.previous_hash.as_deref(),
-            &self.event,
-        )?;
+        let payload =
+            Self::unsigned_payload(self.recorded_at, self.previous_hash.as_deref(), &self.event)?;
         Ok(self.current_hash == sha256_hex(payload.as_bytes()))
     }
 

@@ -148,7 +148,9 @@ impl ForensicEventMonitor {
 
         for removed_id in previous_ids.difference(&current_ids) {
             if let Some(previous) = self.known_devices.get(removed_id).cloned() {
-                let report = self.health_tracker.record_disconnect(removed_id, Utc::now());
+                let report = self
+                    .health_tracker
+                    .record_disconnect(removed_id, Utc::now());
                 events.push(self.event_with_health(
                     ForensicEventKind::DeviceDisconnected,
                     &previous,
@@ -163,8 +165,7 @@ impl ForensicEventMonitor {
         for (stable_id, device) in &current_map {
             if let Some(previous) = self.known_devices.get(stable_id).cloned() {
                 if previous.mode != device.mode {
-                    self.health_tracker
-                        .record_enumeration_success(stable_id);
+                    self.health_tracker.record_enumeration_success(stable_id);
                     let report = self.health_tracker.record_mode_transition(stable_id);
                     let message =
                         format!("mode changed from {:?} to {:?}", previous.mode, device.mode);
@@ -175,9 +176,7 @@ impl ForensicEventMonitor {
                         report,
                     ));
                 } else if previous != *device {
-                    let report = self
-                        .health_tracker
-                        .record_enumeration_success(stable_id);
+                    let report = self.health_tracker.record_enumeration_success(stable_id);
                     events.push(self.event_with_health(
                         ForensicEventKind::DeviceChanged,
                         device,
@@ -198,10 +197,8 @@ impl ForensicEventMonitor {
 
             if let Some((index, matched)) = reconnect {
                 let (previous_id, previous) = self.recently_disconnected.remove(index);
-                self.health_tracker
-                    .merge_identity(&previous_id, stable_id);
-                self.health_tracker
-                    .record_enumeration_success(stable_id);
+                self.health_tracker.merge_identity(&previous_id, stable_id);
+                self.health_tracker.record_enumeration_success(stable_id);
                 let report = self.health_tracker.record_reconnect(stable_id, Utc::now());
                 let message = format!(
                     "reconnect correlated with score {} and {:?} confidence; previous bus/address {}:{}",
@@ -217,9 +214,7 @@ impl ForensicEventMonitor {
                     report,
                 ));
             } else {
-                let report = self
-                    .health_tracker
-                    .record_enumeration_success(stable_id);
+                let report = self.health_tracker.record_enumeration_success(stable_id);
                 events.push(self.event_with_health(
                     ForensicEventKind::DeviceConnected,
                     device,
@@ -265,14 +260,8 @@ impl ForensicEventMonitor {
         report: HealthReport,
     ) -> ForensicEvent {
         self.sequence = self.sequence.saturating_add(1);
-        ForensicEvent::from_device(
-            self.sequence,
-            kind,
-            self.source.clone(),
-            device,
-            message,
-        )
-        .with_health_report(report)
+        ForensicEvent::from_device(self.sequence, kind, self.source.clone(), device, message)
+            .with_health_report(report)
     }
 }
 
@@ -318,20 +307,14 @@ mod tests {
     fn disconnect_and_reconnect_carry_accumulated_health() {
         let original = device("SERIAL-1", 2, DeviceMode::Adb);
         let stable_id = DeviceIdentity::from_device(&original).stable_id;
-        let mut monitor = ForensicEventMonitor::from_snapshot(
-            ObservationSource::Libusb,
-            vec![original],
-        );
+        let mut monitor =
+            ForensicEventMonitor::from_snapshot(ObservationSource::Libusb, vec![original]);
 
         let removed = monitor.process_snapshot(Vec::new());
         assert_eq!(removed[0].kind, ForensicEventKind::DeviceDisconnected);
         assert_eq!(removed[0].health_report.disconnect_count, 1);
 
-        let reconnected = monitor.process_snapshot(vec![device(
-            "SERIAL-1",
-            9,
-            DeviceMode::Adb,
-        )]);
+        let reconnected = monitor.process_snapshot(vec![device("SERIAL-1", 9, DeviceMode::Adb)]);
         assert_eq!(reconnected[0].kind, ForensicEventKind::DeviceReconnected);
         assert_eq!(reconnected[0].health_report.reconnect_count, 1);
         assert_eq!(reconnected[0].health_report.rapid_reconnect_count, 1);
@@ -339,19 +322,19 @@ mod tests {
             .health_report
             .signals
             .contains(&HealthSignal::RapidReconnect));
-        assert_ne!(monitor.health_report(&stable_id).state, HealthState::Unknown);
+        assert_ne!(
+            monitor.health_report(&stable_id).state,
+            HealthState::Unknown
+        );
     }
 
     #[test]
     fn mode_change_updates_health_history() {
         let original = device("SERIAL-2", 2, DeviceMode::Adb);
-        let mut monitor = ForensicEventMonitor::from_snapshot(
-            ObservationSource::Libusb,
-            vec![original],
-        );
+        let mut monitor =
+            ForensicEventMonitor::from_snapshot(ObservationSource::Libusb, vec![original]);
 
-        let events =
-            monitor.process_snapshot(vec![device("SERIAL-2", 2, DeviceMode::Fastboot)]);
+        let events = monitor.process_snapshot(vec![device("SERIAL-2", 2, DeviceMode::Fastboot)]);
         assert_eq!(events[0].kind, ForensicEventKind::ModeChanged);
         assert_eq!(events[0].health_report.mode_transition_count, 1);
         assert!(events[0]
@@ -365,8 +348,7 @@ mod tests {
         let mut monitor =
             ForensicEventMonitor::from_snapshot(ObservationSource::Libusb, Vec::new());
 
-        let events =
-            monitor.process_snapshot(vec![device("SERIAL-3", 4, DeviceMode::Adb)]);
+        let events = monitor.process_snapshot(vec![device("SERIAL-3", 4, DeviceMode::Adb)]);
         assert_eq!(events[0].kind, ForensicEventKind::DeviceConnected);
         assert_eq!(events[0].health_report.state, HealthState::Healthy);
         assert_eq!(events[0].health_report.enumeration_success_count, 1);
