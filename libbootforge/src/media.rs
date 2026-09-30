@@ -156,7 +156,11 @@ mod tests {
 
     #[test]
     fn every_supported_desktop_host_can_plan_windows_and_linux_media() {
-        for host in [HostPlatform::Windows, HostPlatform::MacOs, HostPlatform::Linux] {
+        for host in [
+            HostPlatform::Windows,
+            HostPlatform::MacOs,
+            HostPlatform::Linux,
+        ] {
             for target in [MediaTarget::WindowsInstaller, MediaTarget::LinuxLive] {
                 let cap = media_capability(host, target);
                 assert_ne!(cap.level, CapabilityLevel::Unsupported);
@@ -183,7 +187,11 @@ mod tests {
 
     #[test]
     fn all_three_hosts_have_a_raw_macos_image_path() {
-        for host in [HostPlatform::Windows, HostPlatform::MacOs, HostPlatform::Linux] {
+        for host in [
+            HostPlatform::Windows,
+            HostPlatform::MacOs,
+            HostPlatform::Linux,
+        ] {
             let cap = media_capability(host, MediaTarget::MacOsRawImage);
             assert_eq!(cap.level, CapabilityLevel::SupportedWithNativeBackend);
             assert!(cap.backend.is_some());
