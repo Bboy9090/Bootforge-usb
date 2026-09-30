@@ -1,0 +1,49 @@
+name: Cross-Platform Media Matrix
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "libbootforge/**"
+      - "docs/CROSS_PLATFORM_MEDIA_MATRIX.md"
+      - ".github/workflows/cross-platform-media.yml"
+  push:
+    branches:
+      - "feature/cross-platform-media-matrix"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  libbootforge:
+    name: libbootforge / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Linux libusb
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev pkg-config
+
+      - name: Format
+        run: cargo fmt --check --package libbootforge
+
+      - name: Build
+        run: cargo build --package libbootforge --all-targets --verbose
+
+      - name: Test
+        run: cargo test --package libbootforge --all-targets --verbose
+
+      - name: Clippy
+        run: cargo clippy --package libbootforge --all-targets -- -D warnings
