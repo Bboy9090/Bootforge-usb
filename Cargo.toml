@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
     "libbootforge",
+    "bootforge-writer",
     "services/device-analysis",
     "services/ownership-verification",
     "services/legal-classification",
