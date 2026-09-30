@@ -1,7 +1,8 @@
 //! # libbootforge
 //!
 //! Low-level, read-only-first forensic USB detection, identity correlation, protocol
-//! classification, driver visibility, health reporting, and event intelligence.
+//! classification, driver visibility, health reporting, event intelligence, and
+//! non-destructive boot-media capability planning.
 
 pub mod detect;
 pub mod driver;
@@ -12,6 +13,7 @@ pub mod forensic;
 pub mod health;
 pub mod identity;
 pub mod lifetime;
+pub mod media;
 pub mod native_driver;
 pub mod notification;
 pub mod protocol;
@@ -43,6 +45,9 @@ pub use identity::{
     correlate_reconnect, DeviceIdentity, IdentityConfidence, IdentityEvidence, ReconnectMatch,
 };
 pub use lifetime::{DeviceLifetime, LifetimeTracker};
+pub use media::{
+    host_matrix, media_capability, CapabilityLevel, HostPlatform, MediaCapability, MediaTarget,
+};
 pub use native_driver::inspect_platform_driver;
 pub use notification::{NotificationSignal, NotificationWake, PollingWake, WakeReason, WakeResult};
 pub use protocol::{
@@ -96,6 +101,8 @@ mod tests {
         let _topology: Option<TopologySnapshot> = None;
         let _lifetime: Option<DeviceLifetime> = None;
         let _fingerprint: Option<ForensicFingerprint> = None;
+        let _media: Option<MediaCapability> = None;
         let _router: fn(&DeviceInfo) -> DriverReport = inspect_platform_driver;
+        let _matrix: fn(HostPlatform) -> Vec<MediaCapability> = host_matrix;
     }
 }
