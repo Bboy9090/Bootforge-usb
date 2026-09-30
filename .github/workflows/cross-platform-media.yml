@@ -6,7 +6,9 @@ on:
     branches: ["main"]
     paths:
       - "libbootforge/**"
+      - "bootforge-writer/**"
       - "docs/CROSS_PLATFORM_MEDIA_MATRIX.md"
+      - "docs/EXTERNAL_EXECUTOR_CONTRACT.md"
       - ".github/workflows/cross-platform-media.yml"
   push:
     branches:
@@ -17,7 +19,7 @@ env:
 
 jobs:
   libbootforge:
-    name: libbootforge / ${{ matrix.os }}
+    name: media contract / ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -37,13 +39,22 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev pkg-config
 
       - name: Format
-        run: cargo fmt --check --package libbootforge
+        run: cargo fmt --check --package libbootforge --package bootforge-writer
 
-      - name: Build
+      - name: Build read-only core
         run: cargo build --package libbootforge --all-targets --verbose
 
-      - name: Test
+      - name: Build executor handoff contract
+        run: cargo build --package bootforge-writer --all-targets --verbose
+
+      - name: Test read-only core
         run: cargo test --package libbootforge --all-targets --verbose
 
-      - name: Clippy
+      - name: Test executor handoff contract
+        run: cargo test --package bootforge-writer --all-targets --verbose
+
+      - name: Clippy read-only core
         run: cargo clippy --package libbootforge --all-targets -- -D warnings
+
+      - name: Clippy executor handoff contract
+        run: cargo clippy --package bootforge-writer --all-targets -- -D warnings
