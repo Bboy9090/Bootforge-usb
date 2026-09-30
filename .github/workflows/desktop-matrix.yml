@@ -25,7 +25,7 @@ jobs:
           - os: macos-latest
             artifact: bootforge-macos
             bundle_path: apps/workshop-ui/src-tauri/target/release/bundle
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             artifact: bootforge-linux
             bundle_path: apps/workshop-ui/src-tauri/target/release/bundle
     runs-on: ${{ matrix.os }}
