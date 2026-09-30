@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "Phoenix Key",
+    "productName": "BootForge",
     "version": "3.0.0"
   },
   "tauri": {
@@ -24,16 +24,16 @@
       "active": true,
       "category": "Utility",
       "copyright": "Copyright © 2026 Bobby's World",
-      "identifier": "com.bobbysworld.phoenixkey",
+      "identifier": "com.bobbysworld.bootforge",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
         "icons/128x128@2x.png",
         "icons/icon.ico"
       ],
-      "longDescription": "Read-only USB device discovery and guided diagnostic routing powered by BootForge.",
-      "shortDescription": "Reignite. Rebuild. Reboot.",
-      "targets": ["msi", "nsis"],
+      "longDescription": "Cross-platform boot-media planning, USB discovery, validation, and guided creation workflows powered by BootForge.",
+      "shortDescription": "Windows, macOS, and Linux media workflows from one desktop app.",
+      "targets": "all",
       "windows": {
         "webviewInstallMode": {
           "type": "downloadBootstrapper",
@@ -52,7 +52,7 @@
         "minHeight": 720,
         "minWidth": 1040,
         "resizable": true,
-        "title": "Phoenix Key · powered by BootForge",
+        "title": "BootForge · Cross-Platform Media Studio",
         "width": 1320
       }
     ]
