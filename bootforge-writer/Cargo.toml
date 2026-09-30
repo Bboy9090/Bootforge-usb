@@ -1,0 +1,12 @@
+[package]
+name = "bootforge-writer"
+version = "0.1.0"
+edition = "2021"
+authors = ["BootForge Contributors"]
+license = "MIT OR Apache-2.0"
+description = "Safety-gated host-native media write orchestration for BootForge"
+
+[dependencies]
+libbootforge = { path = "../libbootforge" }
+serde = { workspace = true }
+thiserror = { workspace = true }
