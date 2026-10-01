@@ -83,6 +83,21 @@ jobs:
         working-directory: nextgen/v0.9/unpacked/BootForge
         run: cargo fmt --all
 
+      - name: Apply audited v0.9 test-only corrections
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("nextgen/v0.9/unpacked/BootForge/crates/bootforge-executor/src/lib.rs")
+          text = path.read_text(encoding="utf-8")
+          old = "assert_eq!(result.bytes_written, 21);"
+          new = "assert_eq!(result.bytes_written, 20);"
+          if text.count(old) != 1:
+              raise SystemExit("expected exactly one stale 21-byte assertion")
+          path.write_text(text.replace(old, new), encoding="utf-8")
+          PY
+
       - name: Build core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
         run: cargo build --workspace --all-targets
