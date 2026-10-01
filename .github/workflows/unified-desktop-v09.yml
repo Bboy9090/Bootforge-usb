@@ -1,0 +1,104 @@
+name: BootForge v0.9 Native Authority Gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/unified-desktop-v0.9
+    paths:
+      - "nextgen/v0.9/**"
+      - ".github/workflows/unified-desktop-v09.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: v0.9 native / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - windows-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Reconstruct and authenticate exact v0.9 RC
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import glob
+          import hashlib
+          import pathlib
+          import zipfile
+
+          root = pathlib.Path("nextgen/v0.9")
+          parts = sorted(glob.glob(str(root / "BootForge_v0.9_unified_desktop_rc.zip.b64.part*")))
+          if len(parts) != 8:
+              raise SystemExit(f"expected 8 payload chunks, found {len(parts)}")
+
+          encoded = "".join(pathlib.Path(p).read_text(encoding="utf-8") for p in parts)
+          raw = base64.b64decode(encoded, validate=True)
+          digest = hashlib.sha256(raw).hexdigest()
+          expected = "d457ba1d23fcb97a3bd993b446e198c565224714171f51d82031b5d65510820f"
+          if digest != expected:
+              raise SystemExit(f"RC checksum mismatch: {digest} != {expected}")
+
+          archive = root / "BootForge_v0.9_unified_desktop_rc.zip"
+          archive.write_bytes(raw)
+          out = root / "unpacked"
+          out.mkdir(exist_ok=True)
+          with zipfile.ZipFile(archive) as zf:
+              zf.testzip()
+              zf.extractall(out)
+          print(f"authenticated {len(raw)} bytes: {digest}")
+          PY
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Linux desktop prerequisites
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            pkg-config
+
+      - name: Rust formatting
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo fmt --all -- --check
+
+      - name: Build core workspace
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo build --workspace --all-targets
+
+      - name: Test core workspace
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo test --workspace --all-targets
+
+      - name: Clippy core workspace
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build Tauri desktop shell
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo build --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml
+
+      - name: Clippy Tauri desktop shell
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo clippy --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml -- -D warnings
