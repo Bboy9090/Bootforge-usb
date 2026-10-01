@@ -96,6 +96,11 @@ jobs:
           if text.count(old) != 1:
               raise SystemExit("expected exactly one stale 21-byte assertion")
           path.write_text(text.replace(old, new), encoding="utf-8")
+
+          desktop = Path("nextgen/v0.9/unpacked/BootForge/apps/bootforge-desktop/src-tauri/Cargo.toml")
+          cargo = desktop.read_text(encoding="utf-8")
+          if "[workspace]" not in cargo:
+              desktop.write_text(cargo.rstrip() + "\n\n[workspace]\n", encoding="utf-8")
           PY
 
       - name: Build core workspace
