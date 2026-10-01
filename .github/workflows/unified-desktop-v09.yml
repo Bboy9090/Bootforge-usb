@@ -89,7 +89,7 @@ jobs:
 
       - name: Test core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
-        run: cargo test --workspace --all-targets
+        run: cargo test --workspace --all-targets -- --test-threads=1
 
       - name: Clippy core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
