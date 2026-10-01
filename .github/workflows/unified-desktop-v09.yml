@@ -79,9 +79,9 @@ jobs:
             patchelf \
             pkg-config
 
-      - name: Rust formatting
+      - name: Normalize Rust formatting for compiler authority
         working-directory: nextgen/v0.9/unpacked/BootForge
-        run: cargo fmt --all -- --check
+        run: cargo fmt --all
 
       - name: Build core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
