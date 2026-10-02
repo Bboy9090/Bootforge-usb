@@ -101,6 +101,22 @@ jobs:
           cargo = desktop.read_text(encoding="utf-8")
           if "[workspace]" not in cargo:
               desktop.write_text(cargo.rstrip() + "\n\n[workspace]\n", encoding="utf-8")
+
+          # The RC omitted Tauri icon assets. Generate deterministic valid assets
+          # solely for compile authority; the branded release icon remains a later packaging gate.
+          import base64, struct
+          icon_dir = desktop.parent / "icons"
+          icon_dir.mkdir(parents=True, exist_ok=True)
+          png = base64.b64decode(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+          )
+          (icon_dir / "icon.png").write_bytes(png)
+          ico = (
+              struct.pack("<HHH", 0, 1, 1)
+              + struct.pack("<BBBBHHII", 1, 1, 0, 0, 1, 32, len(png), 22)
+              + png
+          )
+          (icon_dir / "icon.ico").write_bytes(ico)
           PY
 
       - name: Build core workspace
