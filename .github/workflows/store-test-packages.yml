@@ -103,28 +103,25 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Tauri CLI
-        shell: bash
-        run: cargo install tauri-cli --version "^2" --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
       - name: Build macOS Store/TestFlight preflight app
         if: matrix.kind == 'macos'
-        working-directory: nextgen/v0.9.1/build/BootForge
+        working-directory: nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop
         shell: bash
         run: |
-          cargo tauri build \
-            --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml \
+          npx --yes @tauri-apps/cli@latest build \
             --bundles app \
-            --config apps/bootforge-desktop/src-tauri/tauri.appstore.conf.json
+            --config src-tauri/tauri.appstore.conf.json
 
       - name: Build Windows Store private-test MSI
         if: matrix.kind == 'windows'
-        working-directory: nextgen/v0.9.1/build/BootForge
+        working-directory: nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop
         shell: bash
         run: |
-          cargo tauri build \
-            --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml \
-            --bundles msi
+          npx --yes @tauri-apps/cli@latest build --bundles msi
 
       - name: Upload macOS preflight artifact
         if: matrix.kind == 'macos'
