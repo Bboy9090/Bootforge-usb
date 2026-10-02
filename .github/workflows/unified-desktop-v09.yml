@@ -104,16 +104,40 @@ jobs:
 
           # The RC omitted Tauri icon assets. Generate deterministic valid assets
           # solely for compile authority; the branded release icon remains a later packaging gate.
-          import base64, struct
+          import binascii, struct, zlib
           icon_dir = desktop.parent / "icons"
           icon_dir.mkdir(parents=True, exist_ok=True)
-          png = base64.b64decode(
-              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+
+          def png_chunk(kind, payload):
+              return (
+                  struct.pack(">I", len(payload))
+                  + kind
+                  + payload
+                  + struct.pack(">I", binascii.crc32(kind + payload) & 0xffffffff)
+              )
+
+          width = height = 32
+          rows = []
+          for y in range(height):
+              row = bytearray([0])
+              for x in range(width):
+                  edge = x < 3 or y < 3 or x >= width - 3 or y >= height - 3
+                  if edge:
+                      row.extend((24, 32, 44, 255))
+                  else:
+                      row.extend((52, 120, 246, 255))
+              rows.append(bytes(row))
+          rgba = b"".join(rows)
+          png = (
+              b"\x89PNG\r\n\x1a\n"
+              + png_chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+              + png_chunk(b"IDAT", zlib.compress(rgba, 9))
+              + png_chunk(b"IEND", b"")
           )
           (icon_dir / "icon.png").write_bytes(png)
           ico = (
               struct.pack("<HHH", 0, 1, 1)
-              + struct.pack("<BBBBHHII", 1, 1, 0, 0, 1, 32, len(png), 22)
+              + struct.pack("<BBBBHHII", width, height, 0, 0, 1, 32, len(png), 22)
               + png
           )
           (icon_dir / "icon.ico").write_bytes(ico)
