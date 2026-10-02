@@ -1,0 +1,145 @@
+name: BootForge Store Test Packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/unified-desktop-v0.9
+    paths:
+      - "nextgen/v0.9.1/store/**"
+      - ".github/workflows/store-test-packages.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: store package / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            kind: macos
+          - os: windows-latest
+            kind: windows
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Reconstruct qualified BootForge source
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import glob
+          import pathlib
+          import zipfile
+
+          root = pathlib.Path("nextgen/v0.9")
+          parts = sorted(glob.glob(str(root / "BootForge_v0.9_unified_desktop_rc.zip.b64.part*")))
+          if len(parts) != 8:
+              raise SystemExit(f"expected 8 staged v0.9 chunks, found {len(parts)}")
+          raw = base64.b64decode(
+              "".join(pathlib.Path(p).read_text(encoding="utf-8") for p in parts),
+              validate=True,
+          )
+          out = pathlib.Path("nextgen/v0.9.1/build")
+          out.mkdir(parents=True, exist_ok=True)
+          archive = out / "source.zip"
+          archive.write_bytes(raw)
+          with zipfile.ZipFile(archive) as zf:
+              zf.extractall(out)
+          PY
+
+      - name: Apply v0.9.1 package corrections
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path("nextgen/v0.9.1/build/BootForge")
+          cargo = root / "Cargo.toml"
+          cargo.write_text(
+              cargo.read_text(encoding="utf-8").replace('version = "0.9.0"', 'version = "0.9.1"', 1),
+              encoding="utf-8",
+          )
+
+          tauri_cargo = root / "apps/bootforge-desktop/src-tauri/Cargo.toml"
+          value = tauri_cargo.read_text(encoding="utf-8").replace(
+              'version = "0.9.0"', 'version = "0.9.1"', 1
+          )
+          if "[workspace]" not in value:
+              value = value.rstrip() + "\n\n[workspace]\n"
+          tauri_cargo.write_text(value, encoding="utf-8")
+
+          config = root / "apps/bootforge-desktop/src-tauri/tauri.conf.json"
+          config.write_text(
+              config.read_text(encoding="utf-8").replace('"version": "0.9.0"', '"version": "0.9.1"', 1),
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Add package icons
+        shell: bash
+        run: |
+          cp nextgen/v0.9.1/store/generate-icons.py nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop/src-tauri/generate-icons.py
+          python nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop/src-tauri/generate-icons.py
+
+      - name: Configure macOS Store/TestFlight mode
+        if: matrix.kind == 'macos'
+        shell: bash
+        run: |
+          ROOT="nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop/src-tauri"
+          cp nextgen/v0.9.1/store/store-mode-main.rs "$ROOT/src/main.rs"
+          cp nextgen/v0.9.1/store/macos/Entitlements.plist "$ROOT/Entitlements.plist"
+          cp nextgen/v0.9.1/store/macos/Info.plist "$ROOT/Info.plist"
+          cp nextgen/v0.9.1/store/macos/tauri.appstore.conf.json "$ROOT/tauri.appstore.conf.json"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tauri CLI
+        shell: bash
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Build macOS Store/TestFlight preflight app
+        if: matrix.kind == 'macos'
+        working-directory: nextgen/v0.9.1/build/BootForge
+        shell: bash
+        run: |
+          cargo tauri build \
+            --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml \
+            --bundles app \
+            --config apps/bootforge-desktop/src-tauri/tauri.appstore.conf.json
+
+      - name: Build Windows Store private-test MSI
+        if: matrix.kind == 'windows'
+        working-directory: nextgen/v0.9.1/build/BootForge
+        shell: bash
+        run: |
+          cargo tauri build \
+            --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml \
+            --bundles msi
+
+      - name: Upload macOS preflight artifact
+        if: matrix.kind == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BootForge-v0.9.1-macOS-store-preflight
+          path: nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop/src-tauri/target/release/bundle/macos/*.app
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Windows MSI artifact
+        if: matrix.kind == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BootForge-v0.9.1-Windows-store-private-test
+          path: nextgen/v0.9.1/build/BootForge/apps/bootforge-desktop/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          retention-days: 14
