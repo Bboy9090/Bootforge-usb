@@ -1,4 +1,4 @@
-use bootforge_core::{HostPlatform, MediaTarget};
+use bootforge_core::{chromebook::ChromebookProfile, HostPlatform, MediaTarget};
 use bootforge_desktop_controller::{analyze_source as analyze, SourceAnalysis};
 
 #[tauri::command]
@@ -28,12 +28,20 @@ async fn plan_media(
     _source: SourceAnalysis,
     _target: MediaTarget,
     _selected_device_id: String,
+    _chromebook: Option<ChromebookProfile>,
 ) -> Result<serde_json::Value, String> {
     Err("BootForge Store/TestFlight mode is read-only. USB writing is available only in the separately signed hardware-test build.".into())
 }
 
 #[tauri::command]
-async fn create_media() -> Result<serde_json::Value, String> {
+async fn create_media(
+    _source: SourceAnalysis,
+    _target: MediaTarget,
+    _selected_device_id: String,
+    _chromebook: Option<ChromebookProfile>,
+    _confirmation: String,
+    _volume_label: Option<String>,
+) -> Result<serde_json::Value, String> {
     Err("BootForge Store/TestFlight mode does not perform destructive disk writes.".into())
 }
 
