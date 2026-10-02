@@ -83,7 +83,7 @@ jobs:
         working-directory: nextgen/v0.9/unpacked/BootForge
         run: cargo fmt --all
 
-      - name: Apply audited v0.9 test-only corrections
+      - name: Apply audited v0.9.1 source corrections
         shell: bash
         run: |
           python - <<'PY'
@@ -97,10 +97,38 @@ jobs:
               raise SystemExit("expected exactly one stale 21-byte assertion")
           path.write_text(text.replace(old, new), encoding="utf-8")
 
+          core = Path("nextgen/v0.9/unpacked/BootForge/crates/bootforge-core/src/lib.rs")
+          core_text = core.read_text(encoding="utf-8")
+          old_fixture = """        let base = std::env::temp_dir().join(format!(
+            "bootforge-chromebook-{name}-{}",
+            std::process::id()
+        ));"""
+          new_fixture = """        static NEXT_TEMP_ID: std::sync::atomic::AtomicU64 =
+            std::sync::atomic::AtomicU64::new(0);
+        let temp_id = NEXT_TEMP_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let base = std::env::temp_dir().join(format!(
+            "bootforge-chromebook-{name}-{}-{temp_id}",
+            std::process::id()
+        ));"""
+          if core_text.count(old_fixture) != 1:
+              raise SystemExit("expected exactly one shared Chromebook fixture path")
+          core.write_text(core_text.replace(old_fixture, new_fixture), encoding="utf-8")
+
+          root_cargo = Path("nextgen/v0.9/unpacked/BootForge/Cargo.toml")
+          root_text = root_cargo.read_text(encoding="utf-8")
+          root_cargo.write_text(root_text.replace('version = "0.9.0"', 'version = "0.9.1"', 1), encoding="utf-8")
+
           desktop = Path("nextgen/v0.9/unpacked/BootForge/apps/bootforge-desktop/src-tauri/Cargo.toml")
-          cargo = desktop.read_text(encoding="utf-8")
+          cargo = desktop.read_text(encoding="utf-8").replace('version = "0.9.0"', 'version = "0.9.1"', 1)
           if "[workspace]" not in cargo:
-              desktop.write_text(cargo.rstrip() + "\n\n[workspace]\n", encoding="utf-8")
+              cargo = cargo.rstrip() + "\n\n[workspace]\n"
+          desktop.write_text(cargo, encoding="utf-8")
+
+          config = desktop.parent / "tauri.conf.json"
+          config.write_text(
+              config.read_text(encoding="utf-8").replace('"version": "0.9.0"', '"version": "0.9.1"', 1),
+              encoding="utf-8",
+          )
 
           # The RC omitted Tauri icon assets. Generate deterministic valid assets
           # solely for compile authority; the branded release icon remains a later packaging gate.
@@ -143,13 +171,17 @@ jobs:
           (icon_dir / "icon.ico").write_bytes(ico)
           PY
 
+      - name: Reformat corrected Rust sources
+        working-directory: nextgen/v0.9/unpacked/BootForge
+        run: cargo fmt --all
+
       - name: Build core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
         run: cargo build --workspace --all-targets
 
       - name: Test core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
-        run: cargo test --workspace --all-targets -- --test-threads=1
+        run: cargo test --workspace --all-targets
 
       - name: Clippy core workspace
         working-directory: nextgen/v0.9/unpacked/BootForge
@@ -162,3 +194,12 @@ jobs:
       - name: Clippy Tauri desktop shell
         working-directory: nextgen/v0.9/unpacked/BootForge
         run: cargo clippy --manifest-path apps/bootforge-desktop/src-tauri/Cargo.toml -- -D warnings
+
+      - name: Upload qualified v0.9.1 source tree
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: BootForge-v0.9.1-qualified-source
+          path: nextgen/v0.9/unpacked/BootForge
+          if-no-files-found: error
+          retention-days: 14
