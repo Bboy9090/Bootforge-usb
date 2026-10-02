@@ -78,11 +78,13 @@ jobs:
               value = value.rstrip() + "\n\n[workspace]\n"
           tauri_cargo.write_text(value, encoding="utf-8")
 
+          import json
           config = root / "apps/bootforge-desktop/src-tauri/tauri.conf.json"
-          config.write_text(
-              config.read_text(encoding="utf-8").replace('"version": "0.9.0"', '"version": "0.9.1"', 1),
-              encoding="utf-8",
+          data = json.loads(
+              config.read_text(encoding="utf-8").replace('"version": "0.9.0"', '"version": "0.9.1"', 1)
           )
+          data.setdefault("bundle", {})["icon"] = ["icons/icon.png", "icons/icon.ico"]
+          config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
           PY
 
       - name: Add package icons
