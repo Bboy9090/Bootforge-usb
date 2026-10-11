@@ -1,0 +1,67 @@
+name: Read-Only Core Gates
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bootforge-readonly-core-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-readonly:
+    name: read-only-core
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+
+      - name: Install native USB build dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libusb-1.0-0-dev pkg-config
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Verify formatting
+        run: cargo fmt --all -- --check
+
+      - name: Test libbootforge
+        run: cargo test -p libbootforge
+
+      - name: Test libbootforge ARCWYRE feature
+        run: cargo test -p libbootforge --features arcwyre
+
+      - name: Test read-only compliance services
+        run: |
+          cargo test -p audit-logging
+          cargo test -p device-analysis
+          cargo test -p ownership-verification
+          cargo test -p legal-classification
+
+      - name: Clippy read-only core
+        run: >-
+          cargo clippy
+          -p libbootforge
+          -p audit-logging
+          -p device-analysis
+          -p ownership-verification
+          -p legal-classification
+          --all-targets
+          -- -D warnings
+
+      - name: Verify public safety contract is documented
+        shell: bash
+        run: |
+          grep -q "Diagnostic and read-only operations only" README.md
+          grep -q "No Write Operations" docs/RELEASE_CHECKLIST.md
+          test -f docs/SAFE_WRITE_POLICY.md
