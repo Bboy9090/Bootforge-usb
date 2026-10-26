@@ -1,0 +1,20 @@
+"rust-core":
+  - "libbootforge/**"
+  - "Cargo.toml"
+  - "Cargo.lock"
+"windows-desktop":
+  - "apps/**"
+  - "packaging/**"
+"firmware":
+  - "firmware/**"
+  - "manufacturing/**"
+"automation":
+  - ".github/workflows/**"
+  - "scripts/**"
+"documentation":
+  - "docs/**"
+  - "README.md"
+  - "CONTRIBUTING.md"
+"security":
+  - "SECURITY.md"
+  - "governance/**"
