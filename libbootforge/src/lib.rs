@@ -16,6 +16,7 @@ pub mod native_driver;
 pub mod notification;
 pub mod protocol;
 pub mod recorder;
+pub mod recovery_safety;
 pub mod session;
 pub mod topology;
 pub mod types;
