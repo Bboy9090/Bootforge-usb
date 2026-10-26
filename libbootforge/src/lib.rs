@@ -6,6 +6,7 @@
 pub mod detect;
 pub mod driver;
 pub mod driver_watch;
+pub mod efi_planner;
 pub mod error;
 pub mod fingerprint;
 pub mod forensic;
