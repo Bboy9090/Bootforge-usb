@@ -42,3 +42,5 @@ Thumbs.db
 # Environment files
 *.env
 *.env.*
+
+firmware/uefi/out/
