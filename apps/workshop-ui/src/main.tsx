@@ -20,6 +20,8 @@ interface DeviceInfo {
   recommended_workflow?: string;
 }
 
+interface EfiPlan { target_id: string; status: "ManualInspection" | "RecoveryCandidate" | "NoRepairIndicated"; findings: string[]; recommended_checks: string[]; write_operations: string[]; }
+
 const demoDevices: DeviceInfo[] = [
   {
     bus_number: 1,
@@ -47,6 +49,10 @@ function App() {
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [recoveryView, setRecoveryView] = useState(false);
+  const [efiPlan, setEfiPlan] = useState<EfiPlan | null>(null);
+  const [efiError, setEfiError] = useState("");
+  const [planning, setPlanning] = useState(false);
   const [message, setMessage] = useState("Ready for a read-only USB scan.");
 
   const active = selected === null ? undefined : devices[selected];
@@ -54,6 +60,25 @@ function App() {
     () => devices.filter((device) => device.mode !== "Normal" && device.mode !== "Unknown").length,
     [devices],
   );
+
+  async function previewEfiPlan() {
+    setPlanning(true);
+    setEfiError("");
+    setEfiPlan(null);
+    try {
+      if (!isDesktopRuntime()) {
+        setEfiError("Desktop runtime required. No disk has been inspected.");
+        return;
+      }
+      const plan = await invoke<EfiPlan>("plan_efi_recovery_readonly", { observation: {
+        target_id: "SAMPLE-ONLY-NOT-A-REAL-DISK", scheme: "Gpt",
+        efi_partition_present: true, efi_filesystem_readable: true,
+        boot_entry_present: false, encrypted_volume_locked: false,
+      }});
+      setEfiPlan(plan);
+    } catch (error) { setEfiError(String(error)); }
+    finally { setPlanning(false); }
+  }
 
   async function scan() {
     setScanning(true);
@@ -87,9 +112,9 @@ function App() {
           <small>powered by BootForge</small>
         </div>
         <nav aria-label="Primary">
-          <button className="nav-item active"><span>⌁</span> Device Forge</button>
+          <button className={`nav-item ${!recoveryView ? "active" : ""}`} onClick={() => setRecoveryView(false)}><span>⌁</span> Device Forge</button>
           <button className="nav-item" disabled><span>◇</span> Media Builder</button>
-          <button className="nav-item" disabled><span>↻</span> Recovery Center</button>
+          <button className={`nav-item ${recoveryView ? "active" : ""}`} onClick={() => setRecoveryView(true)}><span>↻</span> Recovery Center</button>
           <button className="nav-item" disabled><span>▦</span> Session History</button>
         </nav>
         <div className="safety-card">
@@ -100,6 +125,23 @@ function App() {
       </aside>
 
       <section className="workspace">
+        {recoveryView ? (
+          <section className="panel" style={{padding: 32, marginTop: 28}} aria-label="Read-only EFI Recovery Center">
+            <p className="eyebrow">INFINITEBOOT / RECOVERY CENTER</p>
+            <h1>EFI Recovery Planning</h1>
+            <p>Diagnostic planning only. No storage is accessed or modified by this screen.</p>
+            <p><strong>Sample observations only:</strong> the example represents a GPT disk with a readable EFI partition and no observed boot entry. It is not a real hardware scan.</p>
+            <button className="scan-button" onClick={previewEfiPlan} disabled={planning}>{planning ? "Planning…" : "Run sample EFI triage"}</button>
+            {efiError && <p role="alert">{efiError}</p>}
+            {efiPlan && <section aria-live="polite" style={{marginTop: 24}}>
+              <h2>Plan status: {efiPlan.status}</h2>
+              <p>Target: {efiPlan.target_id}</p>
+              <h3>Findings</h3><ul>{efiPlan.findings.map((item, i) => <li key={i}>{item}</li>)}</ul>
+              <h3>Recommended checks</h3><ul>{efiPlan.recommended_checks.map((item, i) => <li key={i}>{item}</li>)}</ul>
+              <p>Authorized write operations: {efiPlan.write_operations.length} (read-only)</p>
+            </section>}
+          </section>
+        ) : (<>
         <header className="topbar">
           <div>
             <p className="eyebrow">DEVICE FORGE</p>
@@ -186,6 +228,7 @@ function App() {
             )}
           </section>
         </div>
+        </>)}
       </section>
     </main>
   );
