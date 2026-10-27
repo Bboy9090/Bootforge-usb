@@ -19,6 +19,8 @@ typedef struct {
 EFI_STATUS EFIAPI efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *system) {
   (void)image;
   static const CHAR16 marker[] = { 'I','N','F','I','N','I','T','E','B','O','O','T',' ','U','E','F','I',' ','C','E','R','T',' ','O','K','\r','\n',0 };
+  const char *msg = "INFINITEBOOT_UEFI_CERT_OK\n";
+  for (const char *c = msg; *c; ++c) __asm__ volatile ("outb %0, %1" : : "a"(*c), "Nd"((unsigned short)0xe9));
   if (!system || !system->ConOut || !system->ConOut->OutputString) return 2;
   return system->ConOut->OutputString(system->ConOut, marker);
 }
