@@ -22,17 +22,7 @@ pub struct SamlAssertion {
  * - Extract roles from SAML attributes
  */
 pub fn validate_assertion(_saml_xml: &str) -> Result<SamlAssertion, String> {
-    // Mock implementation - in production, use a SAML library
-    let mut attributes = std::collections::HashMap::new();
-    attributes.insert("roles".to_string(), vec!["operator".to_string()]);
-    
-    Ok(SamlAssertion {
-        name_id: "user-123".to_string(),
-        email: "user@corp.example.com".to_string(),
-        attributes,
-        issuer: "https://idp.example.com".to_string(),
-        valid_until: chrono::Utc::now().timestamp() + 3600,
-    })
+    Err("SAML validation is not configured. Refusing to fabricate an authenticated identity.".to_string())
 }
 
 /**
@@ -51,6 +41,12 @@ pub fn extract_roles(assertion: &SamlAssertion) -> Vec<Role> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_saml_validation_fails_closed_until_real_verifier_is_configured() {
+        let error = validate_assertion("<Assertion/>").expect_err("unconfigured SAML must fail closed");
+        assert!(error.contains("not configured"));
+    }
 
     #[test]
     fn test_extract_roles() {
