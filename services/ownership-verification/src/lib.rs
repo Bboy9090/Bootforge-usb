@@ -151,14 +151,21 @@ mod tests {
             user_id: "user123".to_string(),
             device_id: device.device_id.clone(),
             attestation_type: AttestationType::CourtOrder,
-            documentation_references: vec!["doc1".to_string(), "doc2".to_string(), "doc3".to_string()],
+            documentation_references: vec![
+                "doc1".to_string(),
+                "doc2".to_string(),
+                "doc3".to_string(),
+            ],
             timestamp: Utc::now(),
         };
 
         let result = verify_ownership(&attestation, &device);
         assert!(result.confidence < 0.85);
         assert!(!result.verified);
-        assert_eq!(result.required_authorization, Some(AuthorizationRequirement::OwnershipProof));
+        assert_eq!(
+            result.required_authorization,
+            Some(AuthorizationRequirement::OwnershipProof)
+        );
         assert!(require_ownership_verification(&device));
     }
 }
