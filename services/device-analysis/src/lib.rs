@@ -80,7 +80,8 @@ pub fn enumerate_usb_devices() -> Result<Vec<DeviceInfo>, String> {
  */
 pub fn analyze_usb_device(device: &DeviceInfo) -> DeviceProfile {
     let classification = DeviceClassification::Unknown;
-    let capability_class = "Observed hardware identity and mode; modification state unverified".to_string();
+    let capability_class =
+        "Observed hardware identity and mode; modification state unverified".to_string();
 
     DeviceProfile {
         device_id: format!(
@@ -95,7 +96,10 @@ pub fn analyze_usb_device(device: &DeviceInfo) -> DeviceProfile {
             .manufacturer
             .clone()
             .unwrap_or_else(|| "Unknown".to_string()),
-        security_state: format!("Observed USB mode: {:?}; modification state unverified", device.device_mode),
+        security_state: format!(
+            "Observed USB mode: {:?}; modification state unverified",
+            device.device_mode
+        ),
         capability_class,
         classification,
         restrictions: vec![
