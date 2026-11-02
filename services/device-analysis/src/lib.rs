@@ -2,10 +2,7 @@
 // COMPLIANCE-FIRST: Analysis only, no execution
 
 use chrono::Utc;
-use libbootforge::{
-    device::{DeviceInfo, DeviceMode},
-    enumerate_devices,
-};
+use libbootforge::{device::DeviceInfo, enumerate_devices};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -158,7 +155,7 @@ mod tests {
         assert_eq!(profile.manufacturer, "Apple Inc.");
         assert_eq!(profile.model, "iPhone DFU");
         assert_eq!(profile.classification, DeviceClassification::Unknown);
-        assert!(profile.security_state.contains("DFU"));
+        assert!(profile.security_state.contains("Dfu"));
         assert!(profile.security_state.contains("unverified"));
     }
 
