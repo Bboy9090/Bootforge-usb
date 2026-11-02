@@ -133,7 +133,9 @@ fn determine_legal_status(
                 )
             }
         }
-        device_analysis::DeviceClassification::Clean => (LegalStatus::Permitted, vec![], RiskLevel::Low),
+        device_analysis::DeviceClassification::Clean => {
+            (LegalStatus::Permitted, vec![], RiskLevel::Low)
+        }
         device_analysis::DeviceClassification::Unknown => (
             LegalStatus::RequiresAuthorization,
             vec![AuthorizationType::OwnershipProof],
@@ -238,6 +240,8 @@ mod tests {
         );
         assert_eq!(result.status, LegalStatus::RequiresAuthorization);
         assert_eq!(result.risk_level, RiskLevel::Medium);
-        assert!(result.authorization_required.contains(&AuthorizationType::OwnershipProof));
+        assert!(result
+            .authorization_required
+            .contains(&AuthorizationType::OwnershipProof));
     }
 }
