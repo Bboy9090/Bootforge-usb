@@ -2,10 +2,7 @@
 // COMPLIANCE-FIRST: Analysis only, no execution
 
 use chrono::Utc;
-use libbootforge::{
-    device::{DeviceInfo, DeviceMode},
-    enumerate_devices,
-};
+use libbootforge::{device::DeviceInfo, enumerate_devices};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -44,27 +41,22 @@ pub enum RiskLevel {
  * This function performs diagnostic analysis only.
  * It does NOT execute any modifications, exploits, or bypasses.
  */
-pub fn analyze(metadata: &str) -> DeviceProfile {
-    // Mock device analysis - in production, this would use USB enumeration
-    // For now, we classify based on metadata string
-
-    let (classification, _risk_level) = classify_from_metadata(metadata);
-    let capability_class = determine_capability_class(&classification);
-
+pub fn analyze(_metadata: &str) -> DeviceProfile {
     DeviceProfile {
-        device_id: uuid::Uuid::new_v4().to_string(),
-        model: extract_model(metadata),
-        manufacturer: extract_manufacturer(metadata),
-        security_state: format!("Analyzed - {:?}", classification),
-        capability_class,
-        classification: classification.clone(),
+        device_id: format!("metadata-only-{}", uuid::Uuid::new_v4()),
+        model: "Unverified".to_string(),
+        manufacturer: "Unverified".to_string(),
+        security_state: "Metadata-only input; hardware security state is unverified".to_string(),
+        capability_class: "Evidence required before classification".to_string(),
+        classification: DeviceClassification::Unknown,
         restrictions: vec![
-            "No modification capability".to_string(),
+            "Metadata text is not hardware evidence".to_string(),
+            "Real USB/device observations required".to_string(),
+            "No modification-state inference permitted".to_string(),
             "Analysis only".to_string(),
-            "Read-only operations".to_string(),
         ],
         analysis_timestamp: Utc::now(),
-        non_invasive: true, // Always true
+        non_invasive: true,
     }
 }
 
@@ -84,8 +76,9 @@ pub fn enumerate_usb_devices() -> Result<Vec<DeviceInfo>, String> {
  * Converts low-level USB device information into a high-level DeviceProfile
  */
 pub fn analyze_usb_device(device: &DeviceInfo) -> DeviceProfile {
-    let classification = classify_from_usb_device(device);
-    let capability_class = determine_capability_class(&classification);
+    let classification = DeviceClassification::Unknown;
+    let capability_class =
+        "Observed hardware identity and mode; modification state unverified".to_string();
 
     DeviceProfile {
         device_id: format!(
@@ -100,78 +93,20 @@ pub fn analyze_usb_device(device: &DeviceInfo) -> DeviceProfile {
             .manufacturer
             .clone()
             .unwrap_or_else(|| "Unknown".to_string()),
-        security_state: format!("Mode: {:?}", device.device_mode),
+        security_state: format!(
+            "Observed USB mode: {:?}; modification state unverified",
+            device.device_mode
+        ),
         capability_class,
         classification,
         restrictions: vec![
             "No modification capability".to_string(),
             "Analysis only".to_string(),
             "Read-only operations".to_string(),
+            "Modification state requires independent evidence".to_string(),
         ],
         analysis_timestamp: Utc::now(),
         non_invasive: true,
-    }
-}
-
-fn classify_from_usb_device(device: &DeviceInfo) -> DeviceClassification {
-    // Detect special modes (DFU, Recovery) as potential modifications
-    match device.device_mode {
-        DeviceMode::Dfu | DeviceMode::Recovery => DeviceClassification::HardwareModified,
-        DeviceMode::Diagnostic => DeviceClassification::SoftwareModified,
-        DeviceMode::Normal | DeviceMode::Unknown => DeviceClassification::Clean,
-    }
-}
-
-fn extract_model(metadata: &str) -> String {
-    // Mock extraction - in production, parse from USB descriptors
-    if metadata.contains("iPhone") {
-        "iPhone 13 Pro".to_string()
-    } else if metadata.contains("Samsung") {
-        "Galaxy S21".to_string()
-    } else {
-        "Unknown Device".to_string()
-    }
-}
-
-fn extract_manufacturer(metadata: &str) -> String {
-    // Mock extraction
-    if metadata.contains("iPhone") {
-        "Apple".to_string()
-    } else if metadata.contains("Samsung") {
-        "Samsung".to_string()
-    } else {
-        "Unknown".to_string()
-    }
-}
-
-fn classify_from_metadata(metadata: &str) -> (DeviceClassification, RiskLevel) {
-    // Mock classification - in production, use actual device state analysis
-    let lower = metadata.to_lowercase();
-
-    if lower.contains("hardware") || lower.contains("checkm8") {
-        (DeviceClassification::HardwareModified, RiskLevel::High)
-    } else if lower.contains("service") || lower.contains("imei") {
-        (DeviceClassification::ServiceModified, RiskLevel::VeryHigh)
-    } else if lower.contains("software") || lower.contains("modified") {
-        (DeviceClassification::SoftwareModified, RiskLevel::Medium)
-    } else if lower.contains("clean") || lower.contains("stock") {
-        (DeviceClassification::Clean, RiskLevel::Low)
-    } else {
-        (DeviceClassification::Unknown, RiskLevel::Low)
-    }
-}
-
-fn determine_capability_class(classification: &DeviceClassification) -> String {
-    match classification {
-        DeviceClassification::HardwareModified => {
-            "Hardware-level modification detected".to_string()
-        }
-        DeviceClassification::ServiceModified => "Service-level modification detected".to_string(),
-        DeviceClassification::SoftwareModified => {
-            "Software-level modification detected".to_string()
-        }
-        DeviceClassification::Clean => "No modifications detected".to_string(),
-        DeviceClassification::Unknown => "Unable to determine modification status".to_string(),
     }
 }
 
@@ -180,69 +115,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_analyze_device() {
-        let result = analyze("iPhone 13 Pro - Clean device");
-        assert!(result.non_invasive);
-        assert_eq!(result.classification, DeviceClassification::Clean);
+    fn metadata_only_analysis_never_claims_device_state() {
+        for metadata in [
+            "iPhone 13 Pro - Clean device",
+            "Device with hardware modification",
+            "Device with IMEI modification",
+            "Samsung stock",
+        ] {
+            let result = analyze(metadata);
+            assert!(result.non_invasive);
+            assert_eq!(result.classification, DeviceClassification::Unknown);
+            assert_eq!(result.model, "Unverified");
+            assert!(result.security_state.contains("unverified"));
+        }
     }
 
     #[test]
-    fn test_classify_hardware_modified() {
-        let (classification, risk) = classify_from_metadata("Device with hardware modification");
-        assert_eq!(classification, DeviceClassification::HardwareModified);
-        assert_eq!(risk, RiskLevel::High);
-    }
-
-    #[test]
-    fn test_classify_service_modified() {
-        let (classification, risk) = classify_from_metadata("Device with IMEI modification");
-        assert_eq!(classification, DeviceClassification::ServiceModified);
-        assert_eq!(risk, RiskLevel::VeryHigh);
-    }
-
-    #[test]
-    fn test_always_non_invasive() {
-        let result = analyze("Any device metadata");
-        assert!(result.non_invasive);
-    }
-
-    #[test]
-    #[ignore] // Requires USB subsystem - not available in CI
-    fn test_enumerate_usb_devices() {
-        // This test should succeed even if no devices are connected
-        let result = enumerate_usb_devices();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_analyze_usb_device() {
-        use libbootforge::device::{DeviceInfo, DeviceMode};
-
-        let device = DeviceInfo {
-            vendor_id: 0x05ac,
-            product_id: 0x12a8,
-            manufacturer: Some("Apple Inc.".to_string()),
-            product_name: Some("iPhone".to_string()),
-            serial_number: Some("ABC123".to_string()),
-            class: 0,
-            subclass: 0,
-            protocol: 0,
-            usb_version: 0x0200,
-            device_version: 0x0100,
-            bus_number: 1,
-            device_address: 2,
-            platform_path: None,
-            device_mode: DeviceMode::Normal,
-        };
-
-        let profile = analyze_usb_device(&device);
-        assert!(profile.non_invasive);
-        assert_eq!(profile.manufacturer, "Apple Inc.");
-        assert_eq!(profile.classification, DeviceClassification::Clean);
-    }
-
-    #[test]
-    fn test_classify_dfu_device() {
+    fn usb_observation_preserves_real_identity_but_not_modification_inference() {
         use libbootforge::device::{DeviceInfo, DeviceMode};
 
         let device = DeviceInfo {
@@ -250,7 +139,7 @@ mod tests {
             product_id: 0x1227,
             manufacturer: Some("Apple Inc.".to_string()),
             product_name: Some("iPhone DFU".to_string()),
-            serial_number: None,
+            serial_number: Some("ABC123".to_string()),
             class: 0xfe,
             subclass: 0,
             protocol: 0,
@@ -263,9 +152,17 @@ mod tests {
         };
 
         let profile = analyze_usb_device(&device);
-        assert_eq!(
-            profile.classification,
-            DeviceClassification::HardwareModified
-        );
+        assert_eq!(profile.manufacturer, "Apple Inc.");
+        assert_eq!(profile.model, "iPhone DFU");
+        assert_eq!(profile.classification, DeviceClassification::Unknown);
+        assert!(profile.security_state.contains("Dfu"));
+        assert!(profile.security_state.contains("unverified"));
+    }
+
+    #[test]
+    #[ignore]
+    fn enumerate_usb_devices_uses_real_usb_subsystem() {
+        let result = enumerate_usb_devices();
+        assert!(result.is_ok());
     }
 }

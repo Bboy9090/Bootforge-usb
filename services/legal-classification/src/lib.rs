@@ -133,7 +133,14 @@ fn determine_legal_status(
                 )
             }
         }
-        _ => (LegalStatus::Permitted, vec![], RiskLevel::Low),
+        device_analysis::DeviceClassification::Clean => {
+            (LegalStatus::Permitted, vec![], RiskLevel::Low)
+        }
+        device_analysis::DeviceClassification::Unknown => (
+            LegalStatus::RequiresAuthorization,
+            vec![AuthorizationType::OwnershipProof],
+            RiskLevel::Medium,
+        ),
     }
 }
 
@@ -178,35 +185,63 @@ fn generate_routing_instructions(
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_classify_prohibited_service_modified() {
-        let device = device_analysis::analyze("Device with IMEI modification");
-        let ownership = ownership_verification::VerificationResult {
+    fn profile(classification: device_analysis::DeviceClassification) -> DeviceProfile {
+        DeviceProfile {
+            device_id: "evidence-test".to_string(),
+            model: "Observed model".to_string(),
+            manufacturer: "Observed manufacturer".to_string(),
+            security_state: "test evidence state".to_string(),
+            capability_class: "test".to_string(),
+            classification,
+            restrictions: vec![],
+            analysis_timestamp: chrono::Utc::now(),
+            non_invasive: true,
+        }
+    }
+
+    fn verified_ownership() -> VerificationResult {
+        VerificationResult {
             verified: true,
             confidence: 0.9,
             required_authorization: None,
             blocked: false,
             verification_timestamp: chrono::Utc::now(),
-        };
+        }
+    }
 
-        let result = classify_legal_status(&device, &ownership, Jurisdiction::US);
+    #[test]
+    fn explicit_service_modified_evidence_routes_as_prohibited() {
+        let result = classify_legal_status(
+            &profile(device_analysis::DeviceClassification::ServiceModified),
+            &verified_ownership(),
+            Jurisdiction::US,
+        );
         assert_eq!(result.status, LegalStatus::Prohibited);
         assert_eq!(result.risk_level, RiskLevel::VeryHigh);
     }
 
     #[test]
-    fn test_classify_permitted_clean_device() {
-        let device = device_analysis::analyze("Clean iPhone");
-        let ownership = ownership_verification::VerificationResult {
-            verified: true,
-            confidence: 0.9,
-            required_authorization: None,
-            blocked: false,
-            verification_timestamp: chrono::Utc::now(),
-        };
-
-        let result = classify_legal_status(&device, &ownership, Jurisdiction::US);
+    fn explicit_clean_evidence_can_route_as_permitted() {
+        let result = classify_legal_status(
+            &profile(device_analysis::DeviceClassification::Clean),
+            &verified_ownership(),
+            Jurisdiction::US,
+        );
         assert_eq!(result.status, LegalStatus::Permitted);
         assert_eq!(result.risk_level, RiskLevel::Low);
+    }
+
+    #[test]
+    fn unknown_device_state_fails_closed_to_authorization() {
+        let result = classify_legal_status(
+            &profile(device_analysis::DeviceClassification::Unknown),
+            &verified_ownership(),
+            Jurisdiction::US,
+        );
+        assert_eq!(result.status, LegalStatus::RequiresAuthorization);
+        assert_eq!(result.risk_level, RiskLevel::Medium);
+        assert!(result
+            .authorization_required
+            .contains(&AuthorizationType::OwnershipProof));
     }
 }
