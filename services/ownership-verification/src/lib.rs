@@ -91,7 +91,8 @@ fn calculate_confidence(attestation: &OwnershipAttestation, device: &DeviceProfi
         device_analysis::DeviceClassification::ServiceModified => 0.7,
         device_analysis::DeviceClassification::HardwareModified => 0.8,
         device_analysis::DeviceClassification::SoftwareModified => 0.9,
-        _ => 1.0,
+        device_analysis::DeviceClassification::Clean => 1.0,
+        device_analysis::DeviceClassification::Unknown => 0.8,
     };
 
     let result: f64 = base_confidence * doc_quality * device_adjustment;
@@ -131,6 +132,7 @@ pub fn require_ownership_verification(device: &DeviceProfile) -> bool {
         device.classification,
         device_analysis::DeviceClassification::ServiceModified
             | device_analysis::DeviceClassification::HardwareModified
+            | device_analysis::DeviceClassification::Unknown
     )
 }
 
@@ -138,44 +140,25 @@ pub fn require_ownership_verification(device: &DeviceProfile) -> bool {
 mod tests {
     use super::*;
 
+    fn unknown_profile() -> DeviceProfile {
+        device_analysis::analyze("untrusted metadata")
+    }
+
     #[test]
-    fn test_verify_ownership_with_court_order() {
-        let device = device_analysis::analyze("iPhone - Clean");
+    fn unknown_state_requires_verification_and_cannot_gain_high_confidence_from_metadata() {
+        let device = unknown_profile();
         let attestation = OwnershipAttestation {
             user_id: "user123".to_string(),
             device_id: device.device_id.clone(),
             attestation_type: AttestationType::CourtOrder,
-            documentation_references: vec![
-                "doc1".to_string(),
-                "doc2".to_string(),
-                "doc3".to_string(),
-            ],
+            documentation_references: vec!["doc1".to_string(), "doc2".to_string(), "doc3".to_string()],
             timestamp: Utc::now(),
         };
 
         let result = verify_ownership(&attestation, &device);
-        assert!(result.verified);
-        assert!(result.confidence >= 0.85);
-    }
-
-    #[test]
-    fn test_verify_ownership_low_confidence() {
-        let device = device_analysis::analyze("Device with hardware modification");
-        let attestation = OwnershipAttestation {
-            user_id: "user123".to_string(),
-            device_id: device.device_id.clone(),
-            attestation_type: AttestationType::GiftDocument,
-            documentation_references: vec![],
-            timestamp: Utc::now(),
-        };
-
-        let result = verify_ownership(&attestation, &device);
-        assert!(!result.verified || result.confidence < 0.85);
-    }
-
-    #[test]
-    fn test_require_verification_for_high_risk() {
-        let device = device_analysis::analyze("Device with IMEI modification");
+        assert!(result.confidence < 0.85);
+        assert!(!result.verified);
+        assert_eq!(result.required_authorization, Some(AuthorizationRequirement::OwnershipProof));
         assert!(require_ownership_verification(&device));
     }
 }
