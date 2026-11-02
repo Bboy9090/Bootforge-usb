@@ -42,14 +42,7 @@ impl Role {
  * - Extract roles from token claims
  */
 pub fn validate_token(_jwt: &str) -> Result<Claims, String> {
-    // Mock implementation - in production, use a JWT library like jsonwebtoken
-    Ok(Claims {
-        sub: "user-123".to_string(),
-        email: "user@corp.example.com".to_string(),
-        roles: vec!["operator".to_string()],
-        iat: chrono::Utc::now().timestamp(),
-        exp: chrono::Utc::now().timestamp() + 3600, // 1 hour
-    })
+    Err("OIDC validation is not configured. Refusing to fabricate an authenticated identity.".to_string())
 }
 
 /**
@@ -109,6 +102,12 @@ pub fn authorize_custodian_access(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_oidc_validation_fails_closed_until_real_verifier_is_configured() {
+        let error = validate_token("synthetic-token").expect_err("unconfigured OIDC must fail closed");
+        assert!(error.contains("not configured"));
+    }
 
     #[test]
     fn test_viewer_permissions() {
