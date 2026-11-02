@@ -21,7 +21,6 @@ The existing `docs/SAFE_WRITE_POLICY.md` remains binding on `libbootforge`.
 - **L2 Prepare** — create host-side plans, downloads, staging areas, and recovery packages.
 - **L3 Execute** — authorized writes to removable media or user-owned devices using documented/vendor-supported mechanisms.
 - **L4 Recover** — boot/partition/OS repair and restoration using documented recovery mechanisms.
-- **L5 Advanced Authorized** — vendor-supported bootloader unlock/root workflows after explicit ownership and destructive-data warnings.
 - **Blocked** — credential/security circumvention, activation/FRP bypass, exploit-based unlocking, DRM bypass, unauthorized persistence, or stealth access.
 
 ## PC boot and installer matrix
@@ -72,40 +71,9 @@ Target workflows:
 - no-boot / no-POST handoff to hardware diagnostics
 - encrypted-volume workflows only after the user supplies authorized recovery credentials
 
-## Android device matrix
+## Product boundary
 
-Allowed target workflows:
-- ADB detection and authorized diagnostics.
-- Fastboot/fastbootd detection.
-- OEM/vendor documented bootloader unlock flows where the device owner explicitly opts in and accepts data-loss warnings.
-- Stock firmware flashing using official/vendor-documented tooling and exact model/revision compatibility checks.
-- Recovery/OTA sideload when supported by the OEM.
-- Backup/restore where the platform permits it.
-- Root workflows only when they rely on a vendor-supported/unlocked bootloader and the user explicitly chooses them.
-- Device-specific compatibility database covering model, region, bootloader revision, anti-rollback status, partition layout and image provenance.
-
-Never include:
-- FRP bypass.
-- OEM account/Activation Lock bypass.
-- stolen-device workflows.
-- exploit-based bootloader unlocking.
-- EDL/authentication circumvention or leaked service credentials.
-- carrier/network lock circumvention.
-
-## Apple mobile-device matrix
-
-Allowed target workflows:
-- normal/recovery/DFU detection.
-- Apple-supported update/restore.
-- IPSW provenance and compatibility verification.
-- backup/restore and recovery guidance.
-- signed/authorized developer-device operations.
-
-Never include:
-- Activation Lock bypass.
-- passcode bypass.
-- SEP/security circumvention.
-- exploit-based jailbreak delivery as a product capability.
+Phone and tablet workflows do **not** belong to Boot It Back. Android/iOS device detection, ADB/Fastboot/DFU/Odin, stock firmware, mobile recovery, OEM-supported bootloader unlock/root paths, and mobile compatibility databases belong to **BobFWTools** inside Bobby's Workshop. Boot It Back remains the computer/boot-media/OS-install/recovery product.
 
 ## USB and removable-media creation
 
@@ -132,7 +100,7 @@ Every downloadable image/firmware workflow should record:
 - download timestamp.
 - local checksum.
 - whether the source is official, community, or user-supplied.
-- anti-rollback/security constraints.
+- platform/firmware compatibility constraints.
 
 Unknown or unverifiable images fail closed by default.
 
