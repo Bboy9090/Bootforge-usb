@@ -44,9 +44,10 @@ cargo test -p device-analysis
 cargo run --example list_devices
 ```
 
-**Known Issues**:
-- `audit-logging::test_verify_integrity_fails_on_tamper` may fail (tracked)
-- Event monitoring tests are ignored (require USB hardware)
+**Current hosted evidence**:
+- `audit-logging`, `device-analysis`, `ownership-verification`, and `legal-classification` tests pass in the merged Read-Only Core Gates workflow.
+- `libbootforge` passes both its default and `arcwyre` feature test lanes.
+- Event monitoring / connected-device checks still require real USB hardware and remain separate from hosted CI.
 
 ---
 
@@ -233,6 +234,33 @@ git push origin v3.0.0
 # Create GitHub release
 gh release create v3.0.0 --title "BootForge v3.0.0 - Reforged MVP" --notes-file RELEASE_NOTES.md
 ```
+
+---
+
+## Hosted CI evidence boundary
+
+The merged `.github/workflows/read-only-core-gates.yml` provides repeatable evidence for the non-destructive core:
+
+- formatting;
+- `libbootforge` default tests;
+- `libbootforge --features arcwyre` tests;
+- audit logging;
+- device analysis;
+- ownership verification;
+- legal classification;
+- clippy with warnings denied;
+- documentation assertions for the read-only safety boundary.
+
+A green hosted run does **not** satisfy:
+
+- real USB enumeration on each supported operating system;
+- Windows driver compatibility;
+- macOS device-permission behavior;
+- hardware performance benchmarks;
+- installer validation;
+- manual cross-platform release sign-off.
+
+Those items stay unchecked until physical/platform evidence exists.
 
 ---
 
