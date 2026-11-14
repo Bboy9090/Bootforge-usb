@@ -1,3 +1,7 @@
+# Boot It Back
+
+> **Public Brand Notice**: **Boot It Back** is the official customer-facing product name for this repository (internal lineage: `BootForge`). See [PUBLIC_BRAND_BOUNDARY.md](./PUBLIC_BRAND_BOUNDARY.md).
+
 # BootForge
 
 **BootForge** is a cross-platform USB device detection and enumeration tool for diagnostic and read-only device analysis. Built with Rust, it provides the foundational layer for the Blue Phoenix OS / Bobby's World device ecosystem.
