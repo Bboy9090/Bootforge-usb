@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Boot It Back — BootForge USB</title>
+<style>
+  :root {
+    --bg: #0B0D14;
+    --surface: #151821;
+    --surface2: #202430;
+    --primary: #0541FC;
+    --accent: #F6B467;
+    --text: #F4F7FC;
+    --muted: #9CAEC8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at top right, var(--surface2) 0%, var(--bg) 62%);
+    color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(circle at center, rgba(10,14,28,0.45), rgba(5,8,18,0.96)),
+                url('/assets/splash_1280x720.jpg') center/cover no-repeat;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 56px;
+    transition: opacity 0.55s ease, visibility 0.55s ease;
+  }
+  #splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  .splash-card {
+    background: rgba(8,12,24,0.86); backdrop-filter: blur(18px);
+    border: 1px solid var(--primary); border-radius: 22px; padding: 22px 36px;
+    display: flex; align-items: center; gap: 22px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.75);
+  }
+  .splash-card img { width: 78px; height: 78px; border-radius: 18px; border: 1px solid var(--primary); }
+  .s-bar { width: 320px; height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+  .s-bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.2s; }
+
+  header {
+    height: 60px; background: rgba(10,14,28,0.88); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 18px; flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--primary); }
+  .brand h1 { font-size: 16px; font-weight: 800; }
+  .brand small { display: block; font-size: 11px; color: var(--muted); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab {
+    background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid rgba(255,255,255,0.12);
+    padding: 7px 13px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer;
+  }
+  .tab.active { background: var(--primary); color: #060912; border-color: transparent; }
+  .os-pill { background: rgba(255,255,255,0.07); border: 1px solid var(--primary); color: var(--primary); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; }
+
+  main { flex: 1; overflow-y: auto; padding: 20px; }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .card {
+    background: linear-gradient(160deg, var(--surface), var(--surface2));
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 16px;
+  }
+  .card h3 { font-size: 14px; color: var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .metric { font-size: 28px; font-weight: 800; color: var(--text); }
+  .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .btn {
+    background: var(--primary); color: #060912; border: none; padding: 8px 14px;
+    border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;
+  }
+  .btn.alt { background: var(--accent); color: #060912; }
+  .btn.ghost { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid rgba(255,255,255,0.15); }
+  input, select, textarea {
+    background: rgba(5,8,18,0.75); border: 1px solid rgba(255,255,255,0.18);
+    color: var(--text); padding: 9px 12px; border-radius: 10px; font-size: 13px; width: 100%;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  th { color: var(--primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 800; background: rgba(255,255,255,0.1); color: var(--primary); }
+  .badge.ok { background: rgba(16,185,129,0.2); color: #34D399; }
+  .badge.warn { background: rgba(245,158,11,0.2); color: #FBBF24; }
+  pre { background: rgba(0,0,0,0.45); padding: 12px; border-radius: 10px; font-size: 12px; overflow-x: auto; color: #D1E7FF; }
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="splash-card">
+    <img src="/assets/icon_256.png" alt="Icon">
+    <div>
+      <div style="font-size:24px;font-weight:800;">Boot It Back — BootForge USB</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;">Cross-Platform Read-Only USB Forensics, Recovery & Bootable Media Workbench</div>
+      <div class="s-bar"><div id="sbar"></div></div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <img src="/assets/icon_256.png" alt="Icon">
+    <div><h1>Boot It Back — BootForge USB</h1><small>v0.9.3 • Windows WMI + macOS IOKit + Linux udev/lsblk</small></div>
+  </div>
+  <div class="tabs">
+      <button class="tab active" onclick="openTab('usb',this)">Read-Only USB Tree</button>
+      <button class="tab" onclick="openTab('vol',this)">Volumes &amp; Media</button>
+      <button class="tab" onclick="openTab('hash',this)">Image Forensic Hash</button>
+      <button class="tab" onclick="openTab('os',this)">OS Exclusive</button></div>
+  <div class="os-pill" id="os-pill">WINDOWS EDITION</div>
+</header>
+
+<main><div class="wrap">
+      <section id="tab-usb" class="panel active">
+        <div class="card">
+          <h3>Forensic USB Enumeration (Read-Only Core) <button class="btn" onclick="scanAll()">Rescan Bus</button></h3>
+          <div class="sub" id="bf-be" style="margin-bottom:10px;"></div>
+          <table><thead><tr><th>Device</th><th>VID:PID</th><th>Manufacturer</th><th>Class</th><th>Status</th></tr></thead><tbody id="bf-usb"></tbody></table>
+        </div>
+      </section>
+      <section id="tab-vol" class="panel">
+        <div class="card">
+          <h3>Logical Volumes &amp; Block Devices</h3>
+          <table><thead><tr><th>Drive</th><th>Label</th><th>FileSystem</th><th>Size (GB)</th><th>Free (GB)</th></tr></thead><tbody id="bf-vol"></tbody></table>
+        </div>
+      </section>
+      <section id="tab-hash" class="panel">
+        <div class="card">
+          <h3>Bootable Image SHA-256 &amp; Authenticode Preflight</h3>
+          <div style="display:flex;gap:10px;"><input id="bf-path" placeholder="Path to .iso / .img / .efi artifact"><button class="btn" onclick="verifyMedia()">Compute Forensic Hash</button></div>
+          <pre id="bf-out" style="margin-top:12px;">Zero-write forensic verification ready.</pre>
+        </div>
+      </section>
+      <section id="tab-os" class="panel"><div class="grid" id="os-grid"></div></section></div></main>
+
+<script>
+(function(){
+  let p = 18; const b = document.getElementById('sbar');
+  const iv = setInterval(()=>{ p = Math.min(100, p+24); b.style.width = p+'%'; if(p>=100){ clearInterval(iv); setTimeout(()=>document.getElementById('splash').classList.add('hide'), 280); }}, 120);
+})();
+
+function openTab(id, btn){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+async function loadOsParity(containerId){
+  const p = await (await fetch('/api/platform')).json();
+  document.getElementById('os-pill').textContent = (p.os_label || 'WINDOWS').toUpperCase() + ' EDITION';
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const caps = p.exclusive_capabilities || {};
+  el.innerHTML = ['windows','macos','linux'].map(k=>`
+    <div class="card">
+      <h3>${k.toUpperCase()} <span class="badge ${p.os===k?'ok':''}">${p.os===k?'ACTIVE HOST':'PARITY TARGET'}</span></h3>
+      <div class="sub" style="line-height:1.65;">${(caps[k]||[]).map(c=>'&bull; '+c).join('<br>')}</div>
+    </div>`).join('');
+}
+
+    async function scanAll(){
+      const d = await (await fetch('/api/forensic-scan')).json();
+      document.getElementById('bf-be').textContent = (d.usb?.backend || '') + ' • Policy: ' + d.policy;
+      document.getElementById('bf-usb').innerHTML = (d.usb?.devices||[]).map(x=>`<tr><td><b>${x.name}</b></td><td><code>${x.vid}:${x.pid}</code></td><td>${x.manufacturer||''}</td><td>${x.class}</td><td><span class="badge ok">${x.status}</span></td></tr>`).join('');
+      document.getElementById('bf-vol').innerHTML = (d.storage?.volumes||[]).map(v=>`<tr><td><b>${v.DeviceID}</b></td><td>${v.VolumeName||'(Unlabeled)'}</td><td>${v.FileSystem||''}</td><td>${v.size_gb}</td><td>${v.free_gb}</td></tr>`).join('');
+    }
+    async function verifyMedia(){
+      const path = document.getElementById('bf-path').value.trim();
+      if(!path) return;
+      const r = await (await fetch('/api/verify-media',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})})).json();
+      document.getElementById('bf-out').textContent = JSON.stringify(r, null, 2);
+    }
+    scanAll(); loadOsParity('os-grid');
+</script>
+</body>
+</html>

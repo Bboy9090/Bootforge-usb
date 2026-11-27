@@ -1,0 +1,19 @@
+{
+  "title": "Boot It Back (BootForge USB)",
+  "slug": "boot-it-back",
+  "exe_name": "BootItBack",
+  "version": "0.9.3",
+  "width": 1340,
+  "height": 840,
+  "theme": {
+    "bg": "#0B0D14",
+    "surface": "#151821",
+    "surface2": "#202430",
+    "primary": "#0541FC",
+    "accent": "#F6B467",
+    "secondary": "#60A5FA",
+    "text": "#F4F7FC",
+    "muted": "#9CAEC8"
+  },
+  "extra_datas": []
+}
