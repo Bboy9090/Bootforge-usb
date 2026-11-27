@@ -1,0 +1,3 @@
+# Boot It Back — identity policy
+
+Public desktop product: Boot It Back. Historical repository Bootforge-usb; BootForge is internal technology. Distinct from Phoenix Key. This desktop wrapper is a read-only forensic/media observer, not proof of a functional recovery writer. Do not conflate it with BootForgeStudio in bluephoenix-native or a store artifact. Preserve slug, executable, artwork, bundle identifiers and active PRs. Existing governance PR #47 owns AGENTS.md; reconcile this policy into it during review. Read ZERO_ILLUSION_STANDARD.md. No unauthorized releases or identifier changes; identity tests do not certify functionality or store acceptance.
